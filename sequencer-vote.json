@@ -1,0 +1,46 @@
+{
+  "address": "0xc2E2B715d9e302947Ec7e312fd2384b5a1296099",
+  "sig": "0x3f0ce0bd92d7713342c09aa20a8e1e387e2868ce0bd173d48c3e9d6609578d0f787ce8be6cb8a1705d33ea0828fc74a492395b50e0da1bbf15a1d2cf7a925b331c",
+  "data": {
+    "domain": {
+      "name": "snapshot",
+      "version": "0.1.4"
+    },
+    "types": {
+      "Vote": [
+        {
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "space",
+          "type": "string"
+        },
+        {
+          "name": "timestamp",
+          "type": "uint64"
+        },
+        {
+          "name": "proposal",
+          "type": "bytes32"
+        },
+        {
+          "name": "choice",
+          "type": "uint32"
+        },
+        {
+          "name": "app",
+          "type": "string"
+        }
+      ]
+    },
+    "message": {
+      "space": "gitcoindao.eth",
+      "proposal": "0x6f9c5c8b4a7b736557afae1457c9465275e37516967e15593c51c3376b661b13",
+      "choice": 1,
+      "app": "snapshot",
+      "from": "0xc2E2B715d9e302947Ec7e312fd2384b5a1296099",
+      "timestamp": 1660766325
+    }
+  }
+}

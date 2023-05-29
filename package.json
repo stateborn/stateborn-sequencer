@@ -1,0 +1,45 @@
+{
+  "name": "stateborn-sequencer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc -p tsconfig.json",
+    "start": "node index.js",
+    "nodemon": "node_modules/nodemon/bin/nodemon.js --inspect dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@automapper/classes": "^8.7.7",
+    "@automapper/core": "^8.7.7",
+    "awilix": "^8.0.1",
+    "body-parser": "^1.20.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "ethers": "^6.3.0",
+    "express": "^4.18.2",
+    "fastify-cli": "^5.7.1",
+    "ipfs-http-client": "^56.0.3",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.3.10",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.0",
+    "pino-http": "^8.3.3",
+    "pino-pretty": "^10.0.0",
+    "reflect-metadata": "^0.1.13",
+    "routing-controllers": "^0.10.4",
+    "routing-controllers-openapi": "^4.0.0",
+    "sequelize": "^6.31.1"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "^4.17.17",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^20.2.3",
+    "nodemon": "^2.0.22",
+    "typescript": "^5.0.4"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "address": "0xc2E2B715d9e302947Ec7e312fd2384b5a1296099",
+  "sig": "0x1cf72c8538fb27b953c7299e66ff5fb1af06736366e5b7b484a818e1b81332273452dc8a8e32dd7f4b9d7dedc82725d00619396b4e707377d701a0aabaf0f52d1b",
+  "data": {
+    "domain": {
+      "name": "snapshot",
+      "version": "0.1.4"
+    },
+    "types": {
+      "Proposal": [
+        {
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "space",
+          "type": "string"
+        },
+        {
+          "name": "timestamp",
+          "type": "uint64"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "type": "string"
+        },
+        {
+          "name": "discussion",
+          "type": "string"
+        },
+        {
+          "name": "choices",
+          "type": "string[]"
+        },
+        {
+          "name": "start",
+          "type": "uint64"
+        },
+        {
+          "name": "end",
+          "type": "uint64"
+        },
+        {
+          "name": "snapshot",
+          "type": "uint64"
+        },
+        {
+          "name": "plugins",
+          "type": "string"
+        },
+        {
+          "name": "app",
+          "type": "string"
+        }
+      ]
+    },
+    "message": {
+      "space": "gitcoindao.eth",
+      "type": "single-choice",
+      "title": "Memes, Merch and Marketing Season 15 Budget Request",
+      "body": "This vote is to determine if the S15 budget for the MMM Workstream is approved or if it should be rejected.\n\nThe total amount requested is $172,935, to be paid in GTC.\n\nFor more details, please see this post: https://gov.gitcoin.co/t/s15-proposal-integrated-mmm-budget-request/11222\n\nThe GTC total will be determined, based on (a) the current market price of GTC at the time this proposal is moved to Tally, and (b) the remaining balance in the MMM Multisig (which will determine how much net new funding we require).\n\nTL;DR\nMMM is laser focused on improving the DAO’s overall marketing tactics and operations with a strategic lens. Much of this work will be focused on creating solid marketing foundations for our protocols while also growing our community and grants programs.\n\nIn addition to aligning and driving strategic marketing initiatives, our S15 priorities will include social media management, analytics, content development, and protocol branding work.\n\nBelow is a list of our top 6 priorities for the next 90 days:\n- Branding for the Protocols suite including new names, a narrative framework, visual identity, and robust content plan\n- Onboarding a fractional product marketing manager to support the launch of the protocols suite\n- Create a comprehensive grants program marketing strategy in partnership with with PGF\n- Publish grantee success stories in the form of blog posts and case studies\n- Develop clear guidelines for what “community engagement” means and looks like at Gitcoin through a community engagement strategy (in collaboration with PGF and DAO Ops)\n- Successful co-marketing partnership product partnership launches with Optimism and Fantom",
+      "discussion": "https://gov.gitcoin.co/t/s15-proposal-integrated-mmm-budget-request/11222",
+      "choices": [
+        "Yes ",
+        "No",
+        "Abstain"
+      ],
+      "start": 1660762691,
+      "end": 1661356800,
+      "snapshot": 15360415,
+      "plugins": "{}",
+      "app": "snapshot",
+      "from": "0xc2E2B715d9e302947Ec7e312fd2384b5a1296099",
+      "timestamp": 1660762723
+    }
+  }
+}
