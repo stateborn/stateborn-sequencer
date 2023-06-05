@@ -66,6 +66,9 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             proposal_type_type: ipfsProposal.getClientProposal().getProposalType(),
             ipfs_hash: ipfsHash,
             sequencer_signature: ipfsProposal.getSequencerSignature(),
+            start_date: ipfsProposal.getClientProposal().getStartDateUtc(),
+            end_date: ipfsProposal.getClientProposal().getEndDateUtc(),
+            data: ipfsProposal.getClientProposal().getData(),
         });
         await props.save();
     }
@@ -88,7 +91,10 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                         <string>p.get('title', {plain: true}),
                         <string>p.get('description', {plain: true}),
                         <string>p.get('token_address', {plain: true}),
-                        <ProposalType>p.get('proposal_type_type', {plain: true})),
+                        <ProposalType>p.get('proposal_type_type', {plain: true}),
+                        (<Date>p.get('start_date', { plain: true })).toISOString(),
+                        (<Date>p.get('end_date', {plain: true})).toISOString(),
+                        <any | undefined>p.get('data', {plain: true})),
                     <string>p.get('sequencer_signature', {plain: true})),
                 <string>p.get('ipfs_hash', {plain: true}),
                 <string>p.get('id', {plain: true}));
@@ -124,6 +130,14 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             include: [{model: ProposalOrm, where: {ipfs_hash: proposalIpfsHash}}],
             where: {user_address: userAddress},
             order: [['createdAt', 'DESC']],
+        });
+        return props.map(this.toVote());
+    }
+
+    async findAllVotesOldestFirst(proposalIpfsHash: string): Promise<Vote[]> {
+        const props = await VoteOrm.findAll({
+            include: [{model: ProposalOrm, where: {ipfs_hash: proposalIpfsHash}}],
+            order: [['createdAt', 'ASC']],
         });
         return props.map(this.toVote());
     }

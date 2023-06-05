@@ -1,6 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { YesNoVote } from '../../domain/model/vote/yes-no-vote';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class ClientVoteDto {
 
@@ -15,15 +14,16 @@ export class ClientVoteDto {
     private readonly proposalIpfsHash: string;
 
     @AutoMap()
-    @IsEnum(YesNoVote)
-    private readonly vote: YesNoVote;
+    @IsString()
+    @IsNotEmpty()
+    private readonly vote: string;
 
     @AutoMap()
     @IsString()
     @IsNotEmpty()
     private readonly votingPower: string;
 
-    constructor(voterAddress: string, proposalIpfsHash: string, vote: YesNoVote, votingPower: string) {
+    constructor(voterAddress: string, proposalIpfsHash: string, vote: string, votingPower: string) {
         this.voterAddress = voterAddress;
         this.proposalIpfsHash = proposalIpfsHash;
         this.vote = vote;
@@ -38,7 +38,7 @@ export class ClientVoteDto {
         return this.proposalIpfsHash;
     }
 
-    public getVote(): YesNoVote {
+    public getVote(): string {
         return this.vote;
     }
 

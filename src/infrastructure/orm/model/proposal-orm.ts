@@ -29,6 +29,18 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    start_date: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    end_date: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    data: {
+        type: DataTypes.JSONB,
+        allowNull: true
+    }
 }, {
     indexes: [
         {

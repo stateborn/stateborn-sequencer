@@ -1,5 +1,6 @@
 import { AutoMap } from '@automapper/classes';
 import { ProposalType } from './proposal-type';
+import { IProposalData } from './i-proposal-data';
 
 export class ClientProposal {
 
@@ -13,13 +14,22 @@ export class ClientProposal {
     private readonly tokenAddress: string;
     @AutoMap()
     private readonly proposalType: ProposalType;
+    @AutoMap()
+    private readonly startDateUtc: string;
+    @AutoMap()
+    private readonly endDateUtc: string;
 
-    constructor(sequencerAddress: string, title: string, description: string, tokenAddress: string, proposalType: ProposalType) {
+    readonly data?: IProposalData;
+
+    constructor(sequencerAddress: string, title: string, description: string, tokenAddress: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, data?: IProposalData) {
         this.sequencerAddress = sequencerAddress;
         this.title = title;
         this.description = description;
         this.tokenAddress = tokenAddress;
         this.proposalType = proposalType;
+        this.startDateUtc = startDateUtc;
+        this.endDateUtc = endDateUtc;
+        this.data = data;
     }
 
     public getSequencerAddress() {
@@ -38,5 +48,17 @@ export class ClientProposal {
 
     public getProposalType() {
         return this.proposalType;
+    }
+
+    public getStartDateUtc() {
+        return this.startDateUtc;
+    }
+
+    public getEndDateUtc() {
+        return this.endDateUtc;
+    }
+
+    public getData(): IProposalData | undefined {
+        return this.data;
     }
 }

@@ -1,5 +1,4 @@
-import { Body, Get, JsonController, Param, Post, Put, Req, Res } from 'routing-controllers';
-import { ResponseSchema } from 'routing-controllers-openapi';
+import { Body, Get, JsonController, Param, Post, Req, Res } from 'routing-controllers';
 import { CreateProposalDto } from './dto/create-proposal-dto';
 import { CreateProposalService } from '../application/create-proposal-service';
 import { DI_CONTAINER } from '../infrastructure/di/awilix-config-service';
@@ -9,6 +8,7 @@ import { ProposalDto } from './dto/proposal-dto';
 import { CreateVoteDto } from './dto/create-vote-dto';
 import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
 import { CreateVoteService } from '../application/create-vote-service';
+import { ProposalResultService } from '../application/proposal-result-service';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -34,7 +34,7 @@ export class ProposalController {
     async createProposal(
             @Res() res: Response,
             @Req() req: Request,
-            @Body({ required: true }) createProposalDto: CreateProposalDto) {
+            @Body({ required: true, options: { limit: '5MB' } }) createProposalDto: CreateProposalDto) {
         const createProposalService = <CreateProposalService>DI_CONTAINER.resolve('createProposalService');
         await createProposalService.createProposal(createProposalDto);
         // return await ipfs.add(body);
@@ -95,5 +95,14 @@ export class ProposalController {
         const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
         const votes = await dbVoteRepository.findUserAddressVotes(ipfsHash, userAddress);
         return votes.map((_) => mapperService.toVoteDto(_));
+    }
+
+    @Get('/:ipfsHash/result')
+    async getProposalResult(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('ipfsHash') ipfsHash: string) {
+        const proposalResultService = <ProposalResultService>DI_CONTAINER.resolve('proposalResultService');
+        return proposalResultService.calculateProposalResults(ipfsHash);
     }
 }

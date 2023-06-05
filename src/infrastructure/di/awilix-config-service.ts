@@ -6,6 +6,7 @@ import { SignatureService } from '../../domain/service/signature-service';
 import { AutomapperService } from '../mapper/automapper-service';
 import { MapperService } from '../../application/mapper/mapper-service';
 import { CreateVoteService } from '../../application/create-vote-service';
+import { ProposalResultService } from '../../application/proposal-result-service';
 
 export const DI_CONTAINER = createContainer({
     injectionMode: InjectionMode.PROXY
@@ -41,6 +42,9 @@ export const initializeAwilixDI = () => {
             lifetime: Lifetime.SINGLETON,
         }),
         createVoteService: asClass(CreateVoteService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        proposalResultService: asClass(ProposalResultService, {
             lifetime: Lifetime.SINGLETON,
         }),
     });

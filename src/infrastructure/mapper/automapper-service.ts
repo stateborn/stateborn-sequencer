@@ -13,6 +13,7 @@ import { ClientVoteDto } from '../../interfaces/dto/client-vote-dto';
 import { ClientVote } from '../../domain/model/vote/client-vote';
 import { Vote } from '../../domain/model/vote/vote';
 import { VoteDto } from '../../interfaces/dto/vote-dto';
+import { ProposalType } from '../../domain/model/proposal/proposal-type';
 
 export class AutomapperService {
 
@@ -21,8 +22,36 @@ export class AutomapperService {
         this.mapper = createMapper({
             strategyInitializer: classes(),
         });
-        createMap(this.mapper, ClientProposalDto, ClientProposal);
-        createMap(this.mapper, ClientProposal, ClientProposalDto);
+        createMap(this.mapper, ClientProposalDto, ClientProposal,
+            forMember((d) => d.data, mapFrom((s) => {
+                switch (s.proposalType) {
+                    case ProposalType.YES_NO:
+                        return undefined;
+                    case ProposalType.OPTIONS:
+                        return {
+                            // @ts-ignore
+                            options: s.data!.options,
+                        }
+                    default:
+                        throw new Error(`Unknown proposal type: ${s.proposalType}`);
+                }
+            })),
+        );
+        createMap(this.mapper, ClientProposal, ClientProposalDto,
+            forMember((d) => d.data, mapFrom((s) => {
+                switch (s.getProposalType()) {
+                    case ProposalType.YES_NO:
+                        return undefined;
+                    case ProposalType.OPTIONS:
+                        return {
+                            // @ts-ignore
+                            options: s.data!.options,
+                        }
+                    default:
+                        throw new Error(`Unknown proposal type: ${s.getProposalType()}`);
+                }
+            })),
+        );
         createMap(this.mapper, CreateProposalDto, IpfsProposal);
         createMap(this.mapper, Proposal, ProposalDto,
             forMember((d) => d.clientProposal, mapFrom((s) => this.mapper.map(s.getIpfsProposal().getClientProposal(), ClientProposal, ClientProposalDto))),

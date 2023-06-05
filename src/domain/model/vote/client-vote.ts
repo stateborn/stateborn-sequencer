@@ -1,4 +1,3 @@
-import { YesNoVote } from './yes-no-vote';
 import { AutoMap } from '@automapper/classes';
 
 export class ClientVote {
@@ -8,11 +7,11 @@ export class ClientVote {
     @AutoMap()
     private readonly proposalIpfsHash: string;
     @AutoMap()
-    private readonly vote: YesNoVote;
+    private readonly vote: string;
     @AutoMap()
     private readonly votingPower: string;
 
-    constructor(voterAddress: string, proposalIpfsHash: string, vote: YesNoVote, votingPower: string) {
+    constructor(voterAddress: string, proposalIpfsHash: string, vote: string, votingPower: string) {
         this.voterAddress = voterAddress;
         this.proposalIpfsHash = proposalIpfsHash;
         this.vote = vote;
@@ -27,7 +26,7 @@ export class ClientVote {
         return this.proposalIpfsHash;
     }
 
-    public getVote(): YesNoVote {
+    public getVote(): string {
         return this.vote;
     }
 

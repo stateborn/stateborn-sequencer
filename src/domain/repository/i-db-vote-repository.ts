@@ -5,4 +5,5 @@ export interface IDbVoteRepository {
     saveVote(ipfsVote: IpfsVote, ipfsHash: string, proposalId: string): Promise<void>;
     findVotes(proposalIpfsHash: string, offset?: number, limit?: number): Promise<Vote[]>;
     findUserAddressVotes(proposalIpfsHash: string, userAddress: string): Promise<Vote[]>;
+    findAllVotesOldestFirst(proposalIpfsHash: string): Promise<Vote[]>;
 }

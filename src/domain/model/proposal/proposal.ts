@@ -1,5 +1,6 @@
 import { IpfsProposal } from './ipfs-proposal';
 import { AutoMap } from '@automapper/classes';
+import { IProposalData } from './i-proposal-data';
 
 export class Proposal {
 

@@ -7,6 +7,7 @@ import { CreateVoteDto } from '../interfaces/dto/create-vote-dto';
 import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
 import { LOGGER } from '../infrastructure/pino-logger-service';
 import { IDbUserRepository } from '../domain/repository/i-db-user-repository';
+import { isExpired } from './date-service';
 
 export class CreateVoteService {
     private readonly ipfsRepository: IIpfsProposalRepository;
@@ -38,12 +39,16 @@ export class CreateVoteService {
         if (signatureValid) {
             const proposal = await this.dbProposalRepository.findProposalByIpfsHash(createVoteDto.getClientVote().getProposalIpfsHash());
             if (proposal !== undefined) {
-                const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
-                await this.dbUserRepository.findOrCreateUser(createVoteDto.getClientVote().getVoterAddress());
-                const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
-                LOGGER.info(`Vote of ${createVoteDto.getClientVote().getVoterAddress()} saved to IPFS: ${ipfsHash})`);
-                await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposal.getId());
-                LOGGER.info(`Proposal saved ${ipfsHash} to db`);
+                if (!isExpired(proposal.getIpfsProposal().getClientProposal().getEndDateUtc())) {
+                    const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
+                    await this.dbUserRepository.findOrCreateUser(createVoteDto.getClientVote().getVoterAddress());
+                    const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
+                    LOGGER.info(`Vote of ${createVoteDto.getClientVote().getVoterAddress()} saved to IPFS: ${ipfsHash})`);
+                    await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposal.getId());
+                    LOGGER.info(`Proposal saved ${ipfsHash} to db`);
+                } else {
+                    throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.getClientVote().getProposalIpfsHash()} is ended!`);
+                }
             } else {
                 throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.getClientVote().getProposalIpfsHash()} is not found!`);
             }

@@ -24,10 +24,10 @@ export class CreateProposalService {
     }
 
     public async createProposal(createProposalDto: CreateProposalDto): Promise<void> {
-        const signatureValid = this.signatureService.isProposalValid(createProposalDto.getProposal(), createProposalDto.getSequencerSignature());
+        const signatureValid = this.signatureService.isProposalValid(createProposalDto.getClientProposal(), createProposalDto.getSequencerSignature());
         if (signatureValid) {
             const ipfsProposal = this.mapperService.toIpfsProposal(createProposalDto);
-            await this.dbSequencerRepository.findOrCreateSequencer(createProposalDto.getProposal().getSequencerAddress());
+            await this.dbSequencerRepository.findOrCreateSequencer(createProposalDto.getClientProposal().getSequencerAddress());
             const ipfsHash = await this.ipfsRepository.saveProposal(ipfsProposal);
             LOGGER.info(`Proposal saved to IPFS: ${ipfsHash})`);
             await this.dbProposalRepository.saveProposal(ipfsProposal, ipfsHash);

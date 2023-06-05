@@ -21,7 +21,7 @@ export class CreateProposalDto {
         this.sequencerSignature = sequencerSignature;
     }
 
-    public getProposal(): ClientProposalDto {
+    public getClientProposal(): ClientProposalDto {
         return this.clientProposal;
     }
 
