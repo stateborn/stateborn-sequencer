@@ -2,11 +2,14 @@ import { DataTypes } from 'sequelize';
 import { SEQUELIZE } from '../sequelize-connection-service';
 import { ProposalTypeOrm } from './proposal-type-orm';
 import { SequencerOrm } from './sequencer-orm';
+import { ProposalReportOrm } from './proposal-report-orm';
+import { Dao } from '../../../domain/model/dao/dao';
+import { DaoOrm } from './dao/dao-orm';
 
 const ProposalOrm = SEQUELIZE.define('proposal', {
-    id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4, // generate UUIDV4 as default
+    ipfs_hash: {
+        type: DataTypes.STRING,
+        allowNull: false,
         primaryKey: true,
     },
     title: {
@@ -17,15 +20,7 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    token_address: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    sequencer_signature: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    ipfs_hash: {
+    creator_signature: {
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -47,15 +42,12 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
             name: 'proposal_createdAt_index',
             fields: ['createdAt'],
         },
-        {
-            name: 'proposal_ipfa_hash_index',
-            fields: ['ipfs_hash'],
-        }
     ]
 });
+ProposalOrm.belongsTo(DaoOrm, {foreignKey: {name: 'dao_ipfs_hash', allowNull: false}});
 ProposalOrm.belongsTo(ProposalTypeOrm, {foreignKey: {name: 'proposal_type_type', allowNull: false}});
-ProposalOrm.belongsTo(SequencerOrm, {foreignKey: {name: 'sequencer_address', allowNull: false}});
-ProposalOrm.sync();
+ProposalOrm.belongsTo(SequencerOrm, {foreignKey: {name: 'creator_address', allowNull: false}});
+ProposalOrm.hasOne(ProposalReportOrm, {foreignKey: {name: 'proposal_ipfs_hash', allowNull: false}});
 export {
     ProposalOrm,
 }

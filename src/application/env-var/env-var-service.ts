@@ -4,8 +4,13 @@ export const getProperty = (propertyName: string): string => {
     if (value !== undefined) {
         return value;
     } else {
-        console.warn(`ENV VAR ${propertyName} not set, returning default value ${propertyName}=${Object(envVarsList)[propertyName]}`)
-        return Object(envVarsList)[propertyName];
+        const defaultValue =  Object(envVarsList)[propertyName];
+        if (defaultValue) {
+            console.warn(`ENV VAR ${propertyName} not set, returning default value ${propertyName}=${Object(envVarsList)[propertyName]}`)
+            return defaultValue;
+        } else {
+            throw new Error(`Required ENV VAR ${propertyName} not set! Please set it and restart the application!`);
+        }
     }
 };
 

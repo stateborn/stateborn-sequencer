@@ -25,9 +25,8 @@ const VoteOrm = SEQUELIZE.define('vote', {
     indexes: [
     ]
 });
-VoteOrm.belongsTo(ProposalOrm, { foreignKey: {name: 'proposal_id', allowNull: false }});
+VoteOrm.belongsTo(ProposalOrm, { foreignKey: {name: 'proposal_ipfs_hash', allowNull: false }});
 VoteOrm.belongsTo(UserOrm, { foreignKey: {name: 'user_address', allowNull: false }});
-VoteOrm.sync();
 export {
     VoteOrm,
 }

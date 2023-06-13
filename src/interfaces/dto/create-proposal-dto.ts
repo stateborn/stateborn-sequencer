@@ -9,23 +9,15 @@ export class CreateProposalDto {
     @IsDefined()
     @ValidateNested()
     @Type(() => ClientProposalDto)
-    private readonly clientProposal: ClientProposalDto;
+    clientProposal: ClientProposalDto;
 
     @AutoMap()
     @IsString()
     @IsNotEmpty()
-    private readonly sequencerSignature: string;
+    creatorSignature: string;
 
-    constructor(proposal: ClientProposalDto, sequencerSignature: string) {
+    constructor(proposal: ClientProposalDto, creatorSignature: string) {
         this.clientProposal = proposal;
-        this.sequencerSignature = sequencerSignature;
-    }
-
-    public getClientProposal(): ClientProposalDto {
-        return this.clientProposal;
-    }
-
-    public getSequencerSignature(): string {
-        return this.sequencerSignature;
+        this.creatorSignature = creatorSignature;
     }
 }

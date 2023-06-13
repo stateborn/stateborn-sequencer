@@ -9,7 +9,6 @@ const SequencerOrm = SEQUELIZE.define('sequencer', {
     },
 }, {
 });
-SequencerOrm.sync();
 export {
     SequencerOrm,
 }

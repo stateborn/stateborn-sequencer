@@ -5,60 +5,30 @@ import { IProposalData } from './i-proposal-data';
 export class ClientProposal {
 
     @AutoMap()
-    private readonly sequencerAddress: string;
+    creatorAddress: string;
     @AutoMap()
-    private readonly title: string;
+    daoIpfsHash: string;
     @AutoMap()
-    private readonly description: string;
+    title: string;
     @AutoMap()
-    private readonly tokenAddress: string;
+    description: string;
     @AutoMap()
-    private readonly proposalType: ProposalType;
+    proposalType: ProposalType;
     @AutoMap()
-    private readonly startDateUtc: string;
+    startDateUtc: string;
     @AutoMap()
-    private readonly endDateUtc: string;
+    endDateUtc: string;
 
     readonly data?: IProposalData;
 
-    constructor(sequencerAddress: string, title: string, description: string, tokenAddress: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, data?: IProposalData) {
-        this.sequencerAddress = sequencerAddress;
+    constructor(creatorAddress: string, daoIpfsHash: string, title: string, description: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, data?: IProposalData) {
+        this.creatorAddress = creatorAddress;
+        this.daoIpfsHash = daoIpfsHash;
         this.title = title;
         this.description = description;
-        this.tokenAddress = tokenAddress;
         this.proposalType = proposalType;
         this.startDateUtc = startDateUtc;
         this.endDateUtc = endDateUtc;
         this.data = data;
-    }
-
-    public getSequencerAddress() {
-        return this.sequencerAddress;
-    }
-    public getTitle() {
-        return this.title;
-    }
-    public getDescription() {
-        return this.description;
-    }
-
-    public getTokenAddress() {
-        return this.tokenAddress;
-    }
-
-    public getProposalType() {
-        return this.proposalType;
-    }
-
-    public getStartDateUtc() {
-        return this.startDateUtc;
-    }
-
-    public getEndDateUtc() {
-        return this.endDateUtc;
-    }
-
-    public getData(): IProposalData | undefined {
-        return this.data;
     }
 }

@@ -1,10 +1,12 @@
 import { IPFSHTTPClient } from 'ipfs-http-client';
 import { IPFS_CLIENT } from './ipfs-connection-service';
-import { IIpfsProposalRepository } from '../../domain/repository/i-ipfs-proposal-repository';
+import { IIpfsRepository } from '../../domain/repository/i-ipfs-repository';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { IpfsVote } from '../../domain/model/vote/ipfs-vote';
+import { IpfsProposalReport } from '../../domain/model/proposal/report/ipfs-proposal-report';
+import { IpfsDao } from '../../domain/model/dao/ipfs-dao';
 
-export class IpfsRepository implements IIpfsProposalRepository {
+export class IpfsRepository implements IIpfsRepository {
 
     private client: IPFSHTTPClient = IPFS_CLIENT;
 
@@ -19,5 +21,13 @@ export class IpfsRepository implements IIpfsProposalRepository {
     private async addToIpfs(json: string): Promise<string> {
         const { path } = await this.client.add(json);
         return path;
+    }
+
+    async saveProposalReport(ipfsProposalReport: IpfsProposalReport): Promise<string> {
+        return await this.addToIpfs(JSON.stringify(ipfsProposalReport));
+    }
+
+    async saveDao(ipfsDao: IpfsDao): Promise<string> {
+        return await this.addToIpfs(JSON.stringify(ipfsDao));
     }
 }

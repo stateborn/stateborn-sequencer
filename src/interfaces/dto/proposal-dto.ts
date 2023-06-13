@@ -7,14 +7,14 @@ export class ProposalDto {
     clientProposal: ClientProposalDto;
 
     @AutoMap()
-    sequencerSignature: string;
+    creatorSignature: string;
 
     @AutoMap()
     ipfsHash: string;
 
-    constructor(clientProposal: ClientProposalDto, sequencerSignature: string, ipfsHash: string) {
+    constructor(clientProposal: ClientProposalDto, creatorSignature: string, ipfsHash: string) {
         this.clientProposal = clientProposal;
-        this.sequencerSignature = sequencerSignature;
+        this.creatorSignature = creatorSignature;
         this.ipfsHash = ipfsHash;
     }
 }

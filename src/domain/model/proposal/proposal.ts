@@ -1,22 +1,18 @@
 import { IpfsProposal } from './ipfs-proposal';
 import { AutoMap } from '@automapper/classes';
-import { IProposalData } from './i-proposal-data';
 
 export class Proposal {
 
     @AutoMap(() => IpfsProposal)
-    private readonly ipfsProposal: IpfsProposal;
+    readonly ipfsProposal: IpfsProposal;
 
     @AutoMap()
-    private readonly ipfsHash: string;
+    readonly ipfsHash: string;
 
-    @AutoMap()
-    private readonly id: string;
 
-    constructor(ipfsProposal: IpfsProposal, ipfsHash: string, id: string) {
+    constructor(ipfsProposal: IpfsProposal, ipfsHash: string) {
         this.ipfsProposal = ipfsProposal;
         this.ipfsHash = ipfsHash;
-        this.id = id;
     }
 
     public getIpfsProposal(): IpfsProposal {
@@ -25,9 +21,5 @@ export class Proposal {
 
     public getIpfsHash(): string {
         return this.ipfsHash;
-    }
-
-    public getId(): string {
-        return this.id;
     }
 }

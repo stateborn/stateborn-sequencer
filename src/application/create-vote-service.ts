@@ -1,4 +1,4 @@
-import { IIpfsProposalRepository } from '../domain/repository/i-ipfs-proposal-repository';
+import { IIpfsRepository } from '../domain/repository/i-ipfs-repository';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
 import { IDbSequencerRepository } from '../domain/repository/i-db-sequencer-repository';
 import { IMapperService } from '../domain/service/i-mapper-service';
@@ -10,7 +10,7 @@ import { IDbUserRepository } from '../domain/repository/i-db-user-repository';
 import { isExpired } from './date-service';
 
 export class CreateVoteService {
-    private readonly ipfsRepository: IIpfsProposalRepository;
+    private readonly ipfsRepository: IIpfsRepository;
     private readonly dbVoteRepository: IDbVoteRepository;
     private readonly dbUserRepository:  IDbUserRepository;
     private readonly mapperService: IMapperService;
@@ -19,7 +19,7 @@ export class CreateVoteService {
 
     constructor({ipfsRepository, dbVoteRepository, mapperService, signatureService, dbUserRepository, dbProposalRepository}:
                     {
-                        ipfsRepository: IIpfsProposalRepository,
+                        ipfsRepository: IIpfsRepository,
                         dbVoteRepository: IDbVoteRepository,
                         mapperService: IMapperService,
                         signatureService: SignatureService,
@@ -34,18 +34,19 @@ export class CreateVoteService {
         this.dbProposalRepository = dbProposalRepository;
     }
 
-    async createVote(createVoteDto: CreateVoteDto): Promise<void> {
+    async createVote(createVoteDto: CreateVoteDto): Promise<string> {
         const signatureValid = this.signatureService.isVoteValid(createVoteDto.getClientVote(), createVoteDto.getUserSignature());
         if (signatureValid) {
-            const proposal = await this.dbProposalRepository.findProposalByIpfsHash(createVoteDto.getClientVote().getProposalIpfsHash());
-            if (proposal !== undefined) {
-                if (!isExpired(proposal.getIpfsProposal().getClientProposal().getEndDateUtc())) {
+            const proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(createVoteDto.getClientVote().getProposalIpfsHash());
+            if (proposalWithReport !== undefined) {
+                if (!isExpired(proposalWithReport.proposal.getIpfsProposal().clientProposal.endDateUtc)) {
                     const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
                     await this.dbUserRepository.findOrCreateUser(createVoteDto.getClientVote().getVoterAddress());
                     const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
                     LOGGER.info(`Vote of ${createVoteDto.getClientVote().getVoterAddress()} saved to IPFS: ${ipfsHash})`);
-                    await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposal.getId());
-                    LOGGER.info(`Proposal saved ${ipfsHash} to db`);
+                    await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.getIpfsHash());
+                    LOGGER.info(`Proposal vote saved ${ipfsHash} to db`);
+                    return ipfsHash;
                 } else {
                     throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.getClientVote().getProposalIpfsHash()} is ended!`);
                 }

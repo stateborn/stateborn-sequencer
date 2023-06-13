@@ -7,6 +7,12 @@ import { AutomapperService } from '../mapper/automapper-service';
 import { MapperService } from '../../application/mapper/mapper-service';
 import { CreateVoteService } from '../../application/create-vote-service';
 import { ProposalResultService } from '../../application/proposal-result-service';
+import { ProposalReportService } from '../../application/proposal-report-service';
+import { MerkleTreeService } from '../../application/merkle-tree-service';
+import { GetProposalService } from '../../application/get-proposal-service';
+import { CreateDaoService } from '../../application/dao/create-dao-service';
+import { AlchemyEthProvider } from '../alchemy-eth-provider';
+import { TokenDataService } from '../../application/dao/token-data-service';
 
 export const DI_CONTAINER = createContainer({
     injectionMode: InjectionMode.PROXY
@@ -47,5 +53,27 @@ export const initializeAwilixDI = () => {
         proposalResultService: asClass(ProposalResultService, {
             lifetime: Lifetime.SINGLETON,
         }),
+        // NOT A SINGLETON, IT'S STATEFUL SERVICE
+        merkleTreeService: asClass(MerkleTreeService, {
+            lifetime: Lifetime.TRANSIENT,
+        }),
+        proposalReportService: asClass(ProposalReportService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        getProposalService: asClass(GetProposalService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        createDaoService: asClass(CreateDaoService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        dbDaoRepository: asClass(DbRepository, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        ethProvider: asClass(AlchemyEthProvider, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        tokenDataService: asClass(TokenDataService, {
+            lifetime: Lifetime.SINGLETON,
+        })
     });
 };

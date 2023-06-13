@@ -14,6 +14,12 @@ import { ClientVote } from '../../domain/model/vote/client-vote';
 import { Vote } from '../../domain/model/vote/vote';
 import { VoteDto } from '../../interfaces/dto/vote-dto';
 import { ProposalType } from '../../domain/model/proposal/proposal-type';
+import { ProposalWithReport } from '../../domain/model/proposal/proposal-with-report';
+import { ProposalWithReportDto } from '../../interfaces/dto/proposal-with-report-dto';
+import { ProposalReport } from '../../domain/model/proposal/report/proposal-report';
+import { ProposalReportDto } from '../../interfaces/dto/report/proposal-report-dto';
+import { Dao } from '../../domain/model/dao/dao';
+import { DaoDto } from '../../interfaces/dto/dao/dao-dto';
 
 export class AutomapperService {
 
@@ -39,7 +45,7 @@ export class AutomapperService {
         );
         createMap(this.mapper, ClientProposal, ClientProposalDto,
             forMember((d) => d.data, mapFrom((s) => {
-                switch (s.getProposalType()) {
+                switch (s.proposalType) {
                     case ProposalType.YES_NO:
                         return undefined;
                     case ProposalType.OPTIONS:
@@ -48,19 +54,29 @@ export class AutomapperService {
                             options: s.data!.options,
                         }
                     default:
-                        throw new Error(`Unknown proposal type: ${s.getProposalType()}`);
+                        throw new Error(`Unknown proposal type: ${s.proposalType}`);
                 }
             })),
         );
         createMap(this.mapper, CreateProposalDto, IpfsProposal);
         createMap(this.mapper, Proposal, ProposalDto,
-            forMember((d) => d.clientProposal, mapFrom((s) => this.mapper.map(s.getIpfsProposal().getClientProposal(), ClientProposal, ClientProposalDto))),
+            forMember((d) => d.clientProposal, mapFrom((s) => this.mapper.map(s.getIpfsProposal().clientProposal, ClientProposal, ClientProposalDto))),
+        );
+        createMap(this.mapper, ProposalReport, ProposalReportDto,
+            forMember((d) => d.merkleRootHex, mapFrom((s) => s.ipfsProposalReport.merkleRootHex)),
+        );
+        createMap(this.mapper, ProposalWithReport, ProposalWithReportDto,
+            forMember((d) => d.proposal.clientProposal, mapFrom((s) => this.mapper.map(s.proposal.ipfsProposal.clientProposal, ClientProposal, ClientProposalDto))),
         );
         createMap(this.mapper, ClientVoteDto, ClientVote);
         createMap(this.mapper, CreateVoteDto, IpfsVote);
         createMap(this.mapper, ClientVote, ClientVoteDto);
         createMap(this.mapper, Vote, VoteDto,
             forMember((d) => d.clientVote, mapFrom((s) => this.mapper.map(s.getIpfsVote().getClientVote(), ClientVote, ClientVoteDto))),
+        );
+        createMap(this.mapper, Dao, DaoDto,
+            forMember((d) => d.clientDao, mapFrom((s) => s.ipfsDao.clientDao)),
+            forMember((d) => d.signature, mapFrom((s) => s.ipfsDao.signature)),
         );
     }
 

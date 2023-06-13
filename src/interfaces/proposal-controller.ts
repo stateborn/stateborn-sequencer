@@ -4,11 +4,13 @@ import { CreateProposalService } from '../application/create-proposal-service';
 import { DI_CONTAINER } from '../infrastructure/di/awilix-config-service';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
 import { IMapperService } from '../domain/service/i-mapper-service';
-import { ProposalDto } from './dto/proposal-dto';
 import { CreateVoteDto } from './dto/create-vote-dto';
 import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
 import { CreateVoteService } from '../application/create-vote-service';
 import { ProposalResultService } from '../application/proposal-result-service';
+import { GetProposalService } from '../application/get-proposal-service';
+import { Response } from 'express-serve-static-core';
+import { ProposalWithReportDto } from './dto/proposal-with-report-dto';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -37,31 +39,17 @@ export class ProposalController {
             @Body({ required: true, options: { limit: '5MB' } }) createProposalDto: CreateProposalDto) {
         const createProposalService = <CreateProposalService>DI_CONTAINER.resolve('createProposalService');
         await createProposalService.createProposal(createProposalDto);
-        // return await ipfs.add(body);
-        return '';
-    }
-
-    @Get('/')
-    async getProposals(
-        @Res() res: Response,
-        @Req() req: Request) {
-        const dpProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
-        const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
-        const proposals = await dpProposalRepository.findProposals(0, 10);
-        return proposals.map((_) => mapperService.toProposalDto(_));
+        return res.sendStatus(200);
     }
 
     @Get('/:ipfsHash')
     async getProposal(
             @Res() res: Response,
             @Req() req: Request,
-            @Param('ipfsHash') ipfsHash: string): Promise<ProposalDto | undefined> {
-        const dpProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
-        const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
-        const proposal = await dpProposalRepository.findProposalByIpfsHash(ipfsHash);
-        return proposal ? mapperService.toProposalDto(proposal) : undefined;
+            @Param('ipfsHash') ipfsHash: string): Promise<ProposalWithReportDto | undefined> {
+        const getProposalService = <GetProposalService>DI_CONTAINER.resolve('getProposalService');
+        return getProposalService.getProposal(ipfsHash);
     }
-
 
     @Post('/:ipfsHash/vote')
     async vote(
@@ -70,8 +58,7 @@ export class ProposalController {
             @Body({ required: true }) createVoteDto: CreateVoteDto,
             @Param('ipfsHash') ipfsHash: string) {
         const createVoteService = <CreateVoteService>DI_CONTAINER.resolve('createVoteService');
-        await createVoteService.createVote(createVoteDto);
-        return '';
+        return await createVoteService.createVote(createVoteDto);
     }
 
     @Get('/:ipfsHash/votes')

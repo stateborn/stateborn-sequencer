@@ -10,7 +10,7 @@ export class ProposalResultService {
         this.dbVoteRepository = dbVoteRepository;
     }
 
-    public async calculateProposalResults(proposalIpfsHash: string): Promise<ProposalResultDto>  {
+    public async calculateProposalResults(proposalIpfsHash: string): Promise<ProposalResultDto> {
         const votes = await this.dbVoteRepository.findAllVotesOldestFirst(proposalIpfsHash);
         let totalVotes = 0;
         let totalVotesQuantity = 0;

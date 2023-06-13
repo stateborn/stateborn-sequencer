@@ -9,7 +9,6 @@ const UserOrm = SEQUELIZE.define('user', {
     },
 }, {
 });
-UserOrm.sync();
 export {
     UserOrm,
 }
