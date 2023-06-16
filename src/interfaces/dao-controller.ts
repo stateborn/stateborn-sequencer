@@ -48,7 +48,7 @@ export class DaoController {
         @QueryParam('filter') filter?: string) {
         const dpProposalRepository = <IDbDaoRepository>DI_CONTAINER.resolve('dbDaoRepository');
         const daos = await dpProposalRepository.findDaosIpfsHashes(offset, limit, filter);
-        return daos.map((_) => new ProposalHeaderDto(_));
+        return daos.map((_) => new ProposalHeaderDto(_.ipfsHash, _.proposalNumber.toString()));
     }
 
     @Get('/:daoIpfsHash')
@@ -72,7 +72,7 @@ export class DaoController {
         @QueryParam('filter') filter?: string) {
         const dpProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
         const proposals = await dpProposalRepository.findProposalsIpfsHashes(daoIpfsHash, offset, limit, filter);
-        return proposals.map((_) => new ProposalHeaderDto(_));
+        return proposals.map((_) => { return { ipfsHash: _ }});
     }
 
     @Get('/all/count')

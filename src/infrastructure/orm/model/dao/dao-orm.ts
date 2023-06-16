@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { SEQUELIZE } from '../../sequelize-connection-service';
+import { ProposalOrm } from '../proposal-orm';
 
 const DaoOrm = SEQUELIZE.define('dao', {
     ipfs_hash: {

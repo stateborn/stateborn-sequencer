@@ -3,7 +3,7 @@ import { ProposalOrm } from './model/proposal-orm';
 import { IDbSequencerRepository } from '../../domain/repository/i-db-sequencer-repository';
 import { Sequencer } from '../../domain/model/sequencer';
 import { SequencerOrm } from './model/sequencer-orm';
-import { Model, Op } from 'sequelize';
+import { col, fn, Model, Op } from 'sequelize';
 import { Proposal } from '../../domain/model/proposal/proposal';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { ClientProposal } from '../../domain/model/proposal/client-proposal';
@@ -31,15 +31,23 @@ import { Dao } from '../../domain/model/dao/dao';
 import { ClientDaoDto } from '../../interfaces/dto/dao/client-dao-dto';
 import { ClientDaoTokenDto } from '../../interfaces/dto/dao/client-dao-token-dto';
 import { SEQUELIZE } from './sequelize-connection-service';
+import { DaoHeader } from '../../domain/model/dao/dao-header';
 
 export class DbRepository implements IDbProposalRepository, IDbSequencerRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
 
-    async findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<string[]> {
+    async findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<DaoHeader[]> {
         const searchParams: any = {
+            subQuery: false,
             offset: offset,
             limit: limit,
             order: [['createdAt', 'DESC']],
-            attributes: ['ipfs_hash'],
+            attributes: ['ipfs_hash',  [fn('COUNT', col('proposals.dao_ipfs_hash')), 'proposalCount']],
+            include: [{
+                model: ProposalOrm,
+                as: 'proposals', // replace with the identifier you used in the associations
+                attributes: []  // This is important! Only the count column will be included in the result.
+            }],
+            group: ['dao.ipfs_hash'],
         };
         if (filter !== undefined && filter.trim() !== '') {
             searchParams.where = {
@@ -57,7 +65,10 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             };
         }
         const props = await DaoOrm.findAll(searchParams);
-        return props.map(_ => <string>_.get('ipfs_hash', {plain: true}));
+        return props.map(_ => new DaoHeader(
+            <string>_.get('ipfs_hash', {plain: true}),
+            Number(<string>_.get('proposalCount', {plain: true}))
+        ));
     }
 
     private toDao() {

@@ -38,6 +38,7 @@ export const syncOrm = async () => {
         await ProposalOrm.sync();
         await VoteOrm.sync();
         await ProposalReportOrm.sync();
+        DaoOrm.hasMany(ProposalOrm, {foreignKey: {name: 'dao_ipfs_hash', allowNull: false}});
         await SEQUELIZE.query("CREATE INDEX if not exists proposal_title_full_text_index_2 ON proposals USING GIN (to_tsvector('simple', title))");
         await SEQUELIZE.query("CREATE INDEX if not exists proposal_ipfs_hash_full_text_index ON proposals USING GIN (to_tsvector('simple', ipfs_hash))");
         await SEQUELIZE.query("CREATE INDEX if not exists dao_name_full_text_index ON daos USING GIN (to_tsvector('simple', name))");
