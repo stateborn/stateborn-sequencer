@@ -32,6 +32,10 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
         type: DataTypes.DATE,
         allowNull: false
     },
+    block_number: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
     data: {
         type: DataTypes.JSONB,
         allowNull: true

@@ -40,11 +40,16 @@ export class ClientProposalDto {
     endDateUtc: string;
 
     @AutoMap()
+    @IsString()
+    @IsNotEmpty()
+    blockNumber: string;
+
+    @AutoMap()
     @IsObject()
     @IsOptional()
     data?: IProposalData;
 
-    constructor(creatorAddress: string, daoIpfsHash: string, title: string, description: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, data?: IProposalData) {
+    constructor(creatorAddress: string, daoIpfsHash: string, title: string, description: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, blockNumber: string, data?: IProposalData) {
         this.creatorAddress = creatorAddress;
         this.daoIpfsHash = daoIpfsHash;
         this.title = title;
@@ -52,6 +57,7 @@ export class ClientProposalDto {
         this.proposalType = proposalType;
         this.startDateUtc = startDateUtc;
         this.endDateUtc = endDateUtc;
+        this.blockNumber = blockNumber;
         this.data = data;
     }
 

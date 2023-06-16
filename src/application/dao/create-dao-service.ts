@@ -24,6 +24,8 @@ export class CreateDaoService {
     public async createDao(createDaoDto: CreateDaoDto): Promise<void> {
         const signatureValid = this.signatureService.isDaoValid(createDaoDto.clientDao, createDaoDto.signature, createDaoDto.creatorAddress);
         if (signatureValid) {
+            // const res = this.tokenDataService.getBalanceOfAddressAtBlock(createDaoDto.clientDao.token.address, createDaoDto.creatorAddress, 17477703);
+            // LOGGER.info('MAM USERA RESULTATTTTT', res);
             const token: DaoToken | undefined = await this.tokenDataService.readTokenData(createDaoDto.clientDao.token.address);
             if (token) {
                 // just to persist

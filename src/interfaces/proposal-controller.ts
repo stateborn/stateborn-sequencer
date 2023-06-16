@@ -2,7 +2,6 @@ import { Body, Get, JsonController, Param, Post, Req, Res } from 'routing-contro
 import { CreateProposalDto } from './dto/create-proposal-dto';
 import { CreateProposalService } from '../application/create-proposal-service';
 import { DI_CONTAINER } from '../infrastructure/di/awilix-config-service';
-import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
 import { IMapperService } from '../domain/service/i-mapper-service';
 import { CreateVoteDto } from './dto/create-vote-dto';
 import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
@@ -10,7 +9,8 @@ import { CreateVoteService } from '../application/create-vote-service';
 import { ProposalResultService } from '../application/proposal-result-service';
 import { GetProposalService } from '../application/get-proposal-service';
 import { Response } from 'express-serve-static-core';
-import { ProposalWithReportDto } from './dto/proposal-with-report-dto';
+import { ProposalReportDto } from './dto/report/proposal-report-dto';
+import { ProposalDto } from './dto/proposal-dto';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -46,9 +46,18 @@ export class ProposalController {
     async getProposal(
             @Res() res: Response,
             @Req() req: Request,
-            @Param('ipfsHash') ipfsHash: string): Promise<ProposalWithReportDto | undefined> {
+            @Param('ipfsHash') ipfsHash: string): Promise<ProposalDto | undefined> {
         const getProposalService = <GetProposalService>DI_CONTAINER.resolve('getProposalService');
         return getProposalService.getProposal(ipfsHash);
+    }
+
+    @Get('/:ipfsHash/report')
+    async getProposalReport(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('ipfsHash') ipfsHash: string): Promise<ProposalReportDto | undefined> {
+        const getProposalService = <GetProposalService>DI_CONTAINER.resolve('getProposalService');
+        return getProposalService.getProposalReport(ipfsHash);
     }
 
     @Post('/:ipfsHash/vote')

@@ -30,9 +30,6 @@ const DaoOrm = SEQUELIZE.define('dao', {
     proposal_token_required_quantity: {
         type: DataTypes.INTEGER,
     },
-}, {
-    indexes: [
-    ]
 });
 export {
     DaoOrm,

@@ -5,9 +5,12 @@ export class IpfsReportUserVote {
     ipfsHash: string;
     @AutoMap()
     leafEncoded: string;
+    @AutoMap()
+    voterAddress: string;
 
-    constructor(ipfsHash: string, leafEncoded: string) {
+    constructor(ipfsHash: string, leafEncoded: string, voterAddress: string) {
         this.ipfsHash = ipfsHash;
         this.leafEncoded = leafEncoded;
+        this.voterAddress = voterAddress;
     }
 }

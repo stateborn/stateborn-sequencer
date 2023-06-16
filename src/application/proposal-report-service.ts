@@ -46,7 +46,7 @@ export class ProposalReportService {
             const merkleTreeLeafs: string[] = [];
             for (const vote of reducedVotes) {
                 const encodedVoteKeccak256 = this.signatureService.getEncodedVoteKeccak256(vote, proposalIpfsHash);
-                ipfsReportUserVotes.push(new IpfsReportUserVote(vote.ipfsHash, encodedVoteKeccak256));
+                ipfsReportUserVotes.push(new IpfsReportUserVote(vote.ipfsHash, encodedVoteKeccak256, vote.ipfsVote.clientVote.voterAddress));
                 merkleTreeLeafs.push(encodedVoteKeccak256);
             }
             this.merkleTreeService.initializeMerkleTree(merkleTreeLeafs);
@@ -74,7 +74,7 @@ export class ProposalReportService {
     private async reduceVotes(votes: Vote[]): Promise<Vote[]> {
         const votesMap = new Map<string, Vote>();
         for (const vote of votes) {
-            votesMap.set(vote.getIpfsVote().getClientVote().getVoterAddress(), vote);
+            votesMap.set(vote.ipfsVote.clientVote.vote, vote);
         }
         return Array.from(votesMap.values()).sort(
             (a: Vote, b: Vote) => isDateAAfterB(a.createdAt, b.createdAt) ? 1 : -1)

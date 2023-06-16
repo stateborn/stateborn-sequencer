@@ -27,10 +27,26 @@ export class GetProposalService {
                 // re-read proposal
                 proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
             }
-            return proposalWithReport ? this.mapperService.toProposalWithReportDto(proposalWithReport) : undefined;
+            return proposalWithReport ? this.mapperService.toProposalDto(proposalWithReport.proposal) : undefined;
+        } else {
+            throw new Error(`Proposal with ipfsHash ${ipfsHash} is not found!`);
+        }
+    }
+
+    public async getProposalReport(ipfsHash: string) {
+        let proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
+        if (proposalWithReport !== undefined) {
+            if (isExpired(proposalWithReport.proposal.getIpfsProposal().clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
+                // generating report
+                await this.proposalReportService.calculateReport(ipfsHash);
+                // re-read proposal
+                proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
+            }
+            return proposalWithReport ? this.mapperService.toProposalReportDto(proposalWithReport.proposalReport!) : undefined;
         } else {
             throw new Error(`Proposal with ipfsHash ${ipfsHash} is not found!`);
         }
 
     }
+
 }

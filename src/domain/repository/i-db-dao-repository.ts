@@ -5,6 +5,7 @@ import { Dao } from '../model/dao/dao';
 export interface IDbDaoRepository {
     saveDao(ipfsDao: IpfsDao, daoTokenId: string, ipfsHash: string): Promise<void>;
     findOrCreateDaoToken(daoToken: DaoToken): Promise<DaoToken>;
-    findDaos(offset?: number, limit?: number): Promise<Dao[]>;
+    findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<string[]>;
     findDao(daoIpfsHash: string): Promise<Dao | undefined>;
+    countDaos(): Promise<number>;
 }

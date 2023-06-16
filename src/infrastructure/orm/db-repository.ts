@@ -3,7 +3,7 @@ import { ProposalOrm } from './model/proposal-orm';
 import { IDbSequencerRepository } from '../../domain/repository/i-db-sequencer-repository';
 import { Sequencer } from '../../domain/model/sequencer';
 import { SequencerOrm } from './model/sequencer-orm';
-import { Model } from 'sequelize';
+import { Model, Op } from 'sequelize';
 import { Proposal } from '../../domain/model/proposal/proposal';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { ClientProposal } from '../../domain/model/proposal/client-proposal';
@@ -30,17 +30,34 @@ import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 import { Dao } from '../../domain/model/dao/dao';
 import { ClientDaoDto } from '../../interfaces/dto/dao/client-dao-dto';
 import { ClientDaoTokenDto } from '../../interfaces/dto/dao/client-dao-token-dto';
+import { SEQUELIZE } from './sequelize-connection-service';
 
 export class DbRepository implements IDbProposalRepository, IDbSequencerRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
 
-    async findDaos(offset?: number | undefined, limit?: number | undefined): Promise<Dao[]> {
-        const props = await DaoOrm.findAll({
+    async findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<string[]> {
+        const searchParams: any = {
             offset: offset,
             limit: limit,
             order: [['createdAt', 'DESC']],
-            include: [TokenOrm],
-        });
-        return props.map(this.toDao());
+            attributes: ['ipfs_hash'],
+        };
+        if (filter !== undefined && filter.trim() !== '') {
+            searchParams.where = {
+                [Op.or]: [
+                    {
+                        name: {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', `${filter.trim()}:*`)}
+                    },
+                    {
+                        description: {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', `${filter.trim()}:*`)},
+                    },
+                    {
+                        ipfs_hash: {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', filter.trim())},
+                    }
+                ],
+            };
+        }
+        const props = await DaoOrm.findAll(searchParams);
+        return props.map(_ => <string>_.get('ipfs_hash', {plain: true}));
     }
 
     private toDao() {
@@ -53,7 +70,7 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                         <string>p.get('image_base64', {plain: true}),
                         <string[]>p.get('owners', {plain: true}),
                         <string>p.get('owners_multisig_threshold', {plain: true}),
-                        <string>p.get('proposal_token_required_quantity', { plain: true }),
+                        <string>p.get('proposal_token_required_quantity', {plain: true}),
                         new ClientDaoTokenDto(
                             (<any>p.get('tokens', {plain: true}))[0].address,
                             (<any>p.get('tokens', {plain: true}))[0].name,
@@ -84,13 +101,14 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             console.log(err);
         }
     }
+
     async saveVote(ipfsVote: IpfsVote, ipfsHash: string, proposalIpfsHash: string): Promise<void> {
         const props = VoteOrm.build({
             ipfs_hash: ipfsHash,
-            user_address: ipfsVote.getClientVote().getVoterAddress(),
+            user_address: ipfsVote.clientVote.voterAddress,
             proposal_ipfs_hash: proposalIpfsHash,
-            vote: ipfsVote.getClientVote().getVote(),
-            voting_power: Number(ipfsVote.getClientVote().getVotingPower()),
+            vote: ipfsVote.clientVote.vote,
+            voting_power: Number(ipfsVote.clientVote.votingPower),
         });
         await props.save();
     }
@@ -120,7 +138,6 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             <any>data.get('id', {plain: true}),
         );
     }
-
 
     private daoTokenToUnsavedTokenOrm(daoToken: DaoToken) {
         return {
@@ -170,9 +187,26 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             start_date: ipfsProposal.clientProposal.startDateUtc,
             end_date: ipfsProposal.clientProposal.endDateUtc,
             dao_ipfs_hash: ipfsProposal.clientProposal.daoIpfsHash,
+            block_number: ipfsProposal.clientProposal.blockNumber,
             data: ipfsProposal.clientProposal.data,
         });
         await props.save();
+    }
+
+    public async findProposalsIpfsHashes(daoIpfsHash: string, offset: number = 0, limit: number = 10, filter?: string): Promise<string[]> {
+        const whereClause: any = {dao_ipfs_hash: daoIpfsHash};
+        if (filter !== undefined && filter.trim() !== '') {
+            whereClause.title = {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', `${filter.trim()}:*`)}
+            whereClause.ipfs_hash = {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', filter.trim())}
+        }
+        const props = await ProposalOrm.findAll({
+            offset: offset,
+            limit: limit,
+            where: whereClause,
+            order: [['createdAt', 'DESC']],
+            attributes: ['ipfs_hash'],
+        });
+        return props.map(_ => <string>_.get('ipfs_hash', {plain: true}));
     }
 
     public async findProposals(daoIpfsHash: string, offset: number = 0, limit: number = 10): Promise<Proposal[]> {
@@ -185,6 +219,7 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
         return props.map(this.toProposal());
     }
 
+
     private toProposal() {
         return (p: Model<any, any>) =>
             new Proposal(
@@ -195,8 +230,9 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                         <string>p.get('title', {plain: true}),
                         <string>p.get('description', {plain: true}),
                         <ProposalType>p.get('proposal_type_type', {plain: true}),
-                        (<Date>p.get('start_date', { plain: true })).toISOString(),
+                        (<Date>p.get('start_date', {plain: true})).toISOString(),
                         (<Date>p.get('end_date', {plain: true})).toISOString(),
+                        (<string>p.get('block_number', {plain: true})).toString(),
                         <any | undefined>p.get('data', {plain: true})),
                     <string>p.get('author_signature', {plain: true})),
                 <string>p.get('ipfs_hash', {plain: true}));
@@ -275,6 +311,18 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             include: [TokenOrm],
         });
         return this.toDao()(props!);
+    }
+
+    async countProposals(daoIpfsHash: string): Promise<number> {
+        return await ProposalOrm.count({
+            where: {
+                dao_ipfs_hash: daoIpfsHash,
+            }
+        });
+    }
+
+    async countDaos(): Promise<number> {
+        return await DaoOrm.count();
     }
 
 }

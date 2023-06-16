@@ -1,3 +1,4 @@
 import { create } from 'ipfs-http-client';
+import { getProperty } from '../../application/env-var/env-var-service';
 
-export const IPFS_CLIENT = create({ host: '127.0.0.1', port: 5001, protocol: 'http' });
+export const IPFS_CLIENT = create({ host: getProperty('IPFS_HOST'), port: Number(getProperty('IPFS_PORT')), protocol: 'http' });

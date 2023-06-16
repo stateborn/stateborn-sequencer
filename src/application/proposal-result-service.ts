@@ -17,8 +17,8 @@ export class ProposalResultService {
         const votesMap = new Map<string, OptionVoteResultDto>();
         const userVotesMap = new Map<string, any>();
         for (const vote of votes) {
-            const voterAddress = vote.getIpfsVote().getClientVote().getVoterAddress();
-            const votingPower = Number(vote.getIpfsVote().getClientVote().getVotingPower());
+            const voterAddress = vote.ipfsVote.clientVote.voterAddress;
+            const votingPower = Number(vote.ipfsVote.clientVote.votingPower);
             if (userVotesMap.has(voterAddress)) {
                const previousUserVote = userVotesMap.get(voterAddress);
                totalVotes -= Number(previousUserVote.votingPower);
@@ -28,14 +28,14 @@ export class ProposalResultService {
             }
             totalVotesQuantity += 1;
             totalVotes += Number(votingPower);
-            if (votesMap.has(vote.getIpfsVote().getClientVote().getVote())) {
-                const optionVoteResultDto = votesMap.get(vote.getIpfsVote().getClientVote().getVote())!;
+            if (votesMap.has(vote.ipfsVote.clientVote.vote)) {
+                const optionVoteResultDto = votesMap.get(vote.ipfsVote.clientVote.vote)!;
                 optionVoteResultDto.votes = (Number(optionVoteResultDto.votes) + votingPower).toString();
             } else {
-                votesMap.set(vote.getIpfsVote().getClientVote().getVote(), new OptionVoteResultDto(vote.getIpfsVote().getClientVote().getVote(), votingPower.toString()));
+                votesMap.set(vote.ipfsVote.clientVote.vote, new OptionVoteResultDto(vote.ipfsVote.clientVote.vote, votingPower.toString()));
             }
             userVotesMap.set(voterAddress, {
-                vote: vote.getIpfsVote().getClientVote().getVote(),
+                vote: vote.ipfsVote.clientVote.vote,
                 votingPower
             });
         }

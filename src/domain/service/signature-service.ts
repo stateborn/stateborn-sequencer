@@ -26,7 +26,7 @@ export class SignatureService {
     }
 
     private abiEncodeProposal(clientProposalDto: ClientProposalDto): string {
-        const types = ["address", "bytes", "bytes", "bytes", "bytes32", "bytes32", "bytes32"];
+        const types = ["address", "bytes", "bytes", "bytes", "bytes32", "bytes32", "bytes32", 'uint256'];
         const values = [
             clientProposalDto.creatorAddress,
             ethers.toUtf8Bytes(clientProposalDto.daoIpfsHash),
@@ -34,7 +34,8 @@ export class SignatureService {
             ethers.toUtf8Bytes(clientProposalDto.description),
             encodeBytes32String(clientProposalDto.proposalType),
             encodeBytes32String(clientProposalDto.startDateUtc),
-            encodeBytes32String(clientProposalDto.endDateUtc)];
+            encodeBytes32String(clientProposalDto.endDateUtc),
+            Number(clientProposalDto.blockNumber)];
         if (clientProposalDto.proposalType === ProposalType.OPTIONS) {
             types.push('bytes');
             const options = (<OptionsClientProposalData>clientProposalDto.data).options.join('');
@@ -46,10 +47,10 @@ export class SignatureService {
 
     public getEncodedVoteKeccak256(vote: Vote, proposalIpfsHash: string): string {
         return ethers.keccak256(this.abiEncodeVote(new ClientVoteDto(
-            vote.getIpfsVote().getClientVote().getVoterAddress(),
+            vote.ipfsVote.clientVote.voterAddress,
             proposalIpfsHash,
-            vote.getIpfsVote().getClientVote().getVote(),
-            vote.getIpfsVote().getClientVote().getVotingPower(),
+            vote.ipfsVote.clientVote.vote,
+            vote.ipfsVote.clientVote.votingPower,
         )));
     }
 

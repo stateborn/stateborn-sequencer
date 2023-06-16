@@ -1,4 +1,4 @@
-import { Body, Get, JsonController, Param, Post, Req, Res } from 'routing-controllers';
+import { Body, Get, JsonController, Param, Post, QueryParam, Req, Res } from 'routing-controllers';
 import { DI_CONTAINER } from '../infrastructure/di/awilix-config-service';
 import { Response } from 'express-serve-static-core';
 import { CreateDaoDto } from './dto/dao/create-dao-dto';
@@ -7,6 +7,7 @@ import { IMapperService } from '../domain/service/i-mapper-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
 import { map } from '@automapper/core/lib/mappings/map';
+import { ProposalHeaderDto } from './dto/proposal/proposal-header-dto';
 
 @JsonController('/api/rest/v1/dao')
 export class DaoController {
@@ -39,13 +40,15 @@ export class DaoController {
     }
 
     @Get('/')
-    async getDaos(
+    async getDaosHeaders(
         @Res() res: Response,
-        @Req() req: Request) {
+        @Req() req: Request,
+        @QueryParam('offset') offset: number,
+        @QueryParam('limit') limit: number,
+        @QueryParam('filter') filter?: string) {
         const dpProposalRepository = <IDbDaoRepository>DI_CONTAINER.resolve('dbDaoRepository');
-        const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
-        const proposals = await dpProposalRepository.findDaos(0, 10);
-        return proposals.map((_) => mapperService.toDaoDto(_));
+        const daos = await dpProposalRepository.findDaosIpfsHashes(offset, limit, filter);
+        return daos.map((_) => new ProposalHeaderDto(_));
     }
 
     @Get('/:daoIpfsHash')
@@ -60,16 +63,35 @@ export class DaoController {
     }
 
     @Get('/:daoIpfsHash/proposals')
-    async getProposals(
+    async getProposalHeaders(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('daoIpfsHash') daoIpfsHash: string,
+        @QueryParam('offset') offset: number,
+        @QueryParam('limit') limit: number,
+        @QueryParam('filter') filter?: string) {
+        const dpProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
+        const proposals = await dpProposalRepository.findProposalsIpfsHashes(daoIpfsHash, offset, limit, filter);
+        return proposals.map((_) => new ProposalHeaderDto(_));
+    }
+
+    @Get('/all/count')
+    async countDaos(
+        @Res() res: Response,
+        @Req() req: Request) {
+        const dbDaoRepository = <IDbDaoRepository>DI_CONTAINER.resolve('dbDaoRepository');
+        const proposalCount = await dbDaoRepository.countDaos();
+        return { count: proposalCount.toFixed(0) };
+    }
+
+    @Get('/:daoIpfsHash/proposals/count')
+    async countDaoProposals(
         @Res() res: Response,
         @Req() req: Request,
         @Param('daoIpfsHash') daoIpfsHash: string) {
         const dpProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
-        const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
-        const proposals = await dpProposalRepository.findProposals(daoIpfsHash, 0, 10);
-        return proposals.map((_) => mapperService.toProposalDto(_));
+        const proposalCount = await dpProposalRepository.countProposals(daoIpfsHash);
+        return { count: proposalCount.toFixed(0) };
     }
-
-
 
 }

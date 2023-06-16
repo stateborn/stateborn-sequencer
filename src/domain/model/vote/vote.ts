@@ -17,8 +17,4 @@ export class Vote {
         this.ipfsHash = ipfsHash;
         this.createdAt = createdAt;
     }
-
-    public getIpfsVote(): IpfsVote {
-        return this.ipfsVote;
-    }
 }

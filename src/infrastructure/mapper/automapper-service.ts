@@ -14,8 +14,6 @@ import { ClientVote } from '../../domain/model/vote/client-vote';
 import { Vote } from '../../domain/model/vote/vote';
 import { VoteDto } from '../../interfaces/dto/vote-dto';
 import { ProposalType } from '../../domain/model/proposal/proposal-type';
-import { ProposalWithReport } from '../../domain/model/proposal/proposal-with-report';
-import { ProposalWithReportDto } from '../../interfaces/dto/proposal-with-report-dto';
 import { ProposalReport } from '../../domain/model/proposal/report/proposal-report';
 import { ProposalReportDto } from '../../interfaces/dto/report/proposal-report-dto';
 import { Dao } from '../../domain/model/dao/dao';
@@ -65,14 +63,11 @@ export class AutomapperService {
         createMap(this.mapper, ProposalReport, ProposalReportDto,
             forMember((d) => d.merkleRootHex, mapFrom((s) => s.ipfsProposalReport.merkleRootHex)),
         );
-        createMap(this.mapper, ProposalWithReport, ProposalWithReportDto,
-            forMember((d) => d.proposal.clientProposal, mapFrom((s) => this.mapper.map(s.proposal.ipfsProposal.clientProposal, ClientProposal, ClientProposalDto))),
-        );
         createMap(this.mapper, ClientVoteDto, ClientVote);
         createMap(this.mapper, CreateVoteDto, IpfsVote);
         createMap(this.mapper, ClientVote, ClientVoteDto);
         createMap(this.mapper, Vote, VoteDto,
-            forMember((d) => d.clientVote, mapFrom((s) => this.mapper.map(s.getIpfsVote().getClientVote(), ClientVote, ClientVoteDto))),
+            forMember((d) => d.clientVote, mapFrom((s) => this.mapper.map(s.ipfsVote.clientVote, ClientVote, ClientVoteDto))),
         );
         createMap(this.mapper, Dao, DaoDto,
             forMember((d) => d.clientDao, mapFrom((s) => s.ipfsDao.clientDao)),
