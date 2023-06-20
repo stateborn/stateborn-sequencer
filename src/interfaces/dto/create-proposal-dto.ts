@@ -1,23 +1,23 @@
 import { AutoMap } from '@automapper/classes';
-import { ClientProposalDto } from './client-proposal-dto';
 import { IsDefined, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ClientProposal } from '../../domain/model/proposal/client-proposal';
 
 export class CreateProposalDto {
 
-    @AutoMap(() => ClientProposalDto)
+    @AutoMap(() => ClientProposal)
     @IsDefined()
     @ValidateNested()
-    @Type(() => ClientProposalDto)
-    clientProposal: ClientProposalDto;
+    @Type(() => ClientProposal)
+    clientProposal: ClientProposal;
 
     @AutoMap()
     @IsString()
     @IsNotEmpty()
     creatorSignature: string;
 
-    constructor(proposal: ClientProposalDto, creatorSignature: string) {
-        this.clientProposal = proposal;
+    constructor(clientProposal: ClientProposal, creatorSignature: string) {
+        this.clientProposal = clientProposal;
         this.creatorSignature = creatorSignature;
     }
 }

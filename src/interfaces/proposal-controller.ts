@@ -1,4 +1,4 @@
-import { Body, Get, JsonController, Param, Post, Req, Res } from 'routing-controllers';
+import { Body, Get, JsonController, Param, Post, QueryParam, Req, Res } from 'routing-controllers';
 import { CreateProposalDto } from './dto/create-proposal-dto';
 import { CreateProposalService } from '../application/create-proposal-service';
 import { DI_CONTAINER } from '../infrastructure/di/awilix-config-service';
@@ -11,6 +11,7 @@ import { GetProposalService } from '../application/get-proposal-service';
 import { Response } from 'express-serve-static-core';
 import { ProposalReportDto } from './dto/report/proposal-report-dto';
 import { ProposalDto } from './dto/proposal-dto';
+import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -65,7 +66,7 @@ export class ProposalController {
             @Res() res: Response,
             @Req() req: Request,
             @Body({ required: true }) createVoteDto: CreateVoteDto,
-            @Param('ipfsHash') ipfsHash: string) {
+            @Param('ipfsHash') ipfsHash: string,) {
         const createVoteService = <CreateVoteService>DI_CONTAINER.resolve('createVoteService');
         return await createVoteService.createVote(createVoteDto);
     }
@@ -74,11 +75,33 @@ export class ProposalController {
     async getVotes(
         @Res() res: Response,
         @Req() req: Request,
-        @Param('ipfsHash') ipfsHash: string) {
+        @Param('ipfsHash') ipfsHash: string,
+        @QueryParam('offset') offset: number,
+        @QueryParam('limit') limit: number) {
         const dbVoteRepository = <IDbVoteRepository>DI_CONTAINER.resolve('dbVoteRepository');
         const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
-        const votes = await dbVoteRepository.findVotes(ipfsHash, 0, 10);
+        const votes = await dbVoteRepository.findVotes(ipfsHash, offset, limit);
         return votes.map((_) => mapperService.toVoteDto(_));
+    }
+
+    @Get('/:ipfsHash/votes/all/count')
+    async countVotes(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('ipfsHash') ipfsHash: string) {
+        const dbVoteRepository = <IDbVoteRepository>DI_CONTAINER.resolve('dbVoteRepository');
+        const proposalCount = await dbVoteRepository.countVotes(ipfsHash);
+        return { count: proposalCount.toFixed(0) };
+    }
+
+    @Get('/:ipfsHash/votes/all/count/distinct')
+    async countDistinctVotes(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('ipfsHash') ipfsHash: string) {
+        const dbVoteRepository = <IDbVoteRepository>DI_CONTAINER.resolve('dbVoteRepository');
+        const proposalCount = await dbVoteRepository.countDistinctVotes(ipfsHash);
+        return { count: proposalCount };
     }
 
     @Get('/:ipfsHash/:userAddress/votes')

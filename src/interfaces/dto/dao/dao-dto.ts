@@ -1,10 +1,10 @@
 import { AutoMap } from '@automapper/classes';
-import { ClientDaoDto } from './client-dao-dto';
+import { ClientDao } from '../../../domain/model/dao/client-dao';
 
 export class DaoDto {
 
-    @AutoMap(() => ClientDaoDto)
-    clientDao: ClientDaoDto;
+    @AutoMap(() => ClientDao)
+    clientDao: ClientDao;
 
     @AutoMap()
     signature: string;
@@ -12,7 +12,7 @@ export class DaoDto {
     @AutoMap()
     ipfsHash: string;
 
-    constructor(clientDao: ClientDaoDto, signature: string, ipfsHash: string) {
+    constructor(clientDao: ClientDao, signature: string, ipfsHash: string) {
         this.clientDao = clientDao;
         this.signature = signature;
         this.ipfsHash = ipfsHash;

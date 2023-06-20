@@ -7,6 +7,7 @@ export interface IDbDaoRepository {
     saveDao(ipfsDao: IpfsDao, daoTokenId: string, ipfsHash: string): Promise<void>;
     findOrCreateDaoToken(daoToken: DaoToken): Promise<DaoToken>;
     findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<DaoHeader[]>;
+    countProposals(daoIpfsHash: string): Promise<number>;
     findDao(daoIpfsHash: string): Promise<Dao | undefined>;
     countDaos(): Promise<number>;
 }

@@ -1,6 +1,5 @@
 import { IIpfsRepository } from '../domain/repository/i-ipfs-repository';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
-import { IDbSequencerRepository } from '../domain/repository/i-db-sequencer-repository';
 import { IMapperService } from '../domain/service/i-mapper-service';
 import { SignatureService } from '../domain/service/signature-service';
 import { CreateVoteDto } from '../interfaces/dto/create-vote-dto';
@@ -35,23 +34,23 @@ export class CreateVoteService {
     }
 
     async createVote(createVoteDto: CreateVoteDto): Promise<string> {
-        const signatureValid = this.signatureService.isVoteValid(createVoteDto.getClientVote(), createVoteDto.getUserSignature());
+        const signatureValid = this.signatureService.isVoteValid(createVoteDto.clientVote, createVoteDto.userSignature);
         if (signatureValid) {
-            const proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(createVoteDto.getClientVote().getProposalIpfsHash());
+            const proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(createVoteDto.clientVote.proposalIpfsHash);
             if (proposalWithReport !== undefined) {
-                if (!isExpired(proposalWithReport.proposal.getIpfsProposal().clientProposal.endDateUtc)) {
+                if (!isExpired(proposalWithReport.proposal.ipfsProposal.clientProposal.endDateUtc)) {
                     const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
-                    await this.dbUserRepository.findOrCreateUser(createVoteDto.getClientVote().getVoterAddress());
+                    await this.dbUserRepository.findOrCreateUser(createVoteDto.clientVote.voterAddress);
                     const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
-                    LOGGER.info(`Vote of ${createVoteDto.getClientVote().getVoterAddress()} saved to IPFS: ${ipfsHash})`);
-                    await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.getIpfsHash());
+                    LOGGER.info(`Vote of ${createVoteDto.clientVote.voterAddress} saved to IPFS: ${ipfsHash})`);
+                    await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.ipfsHash);
                     LOGGER.info(`Proposal vote saved ${ipfsHash} to db`);
                     return ipfsHash;
                 } else {
-                    throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.getClientVote().getProposalIpfsHash()} is ended!`);
+                    throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.clientVote.proposalIpfsHash} is ended!`);
                 }
             } else {
-                throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.getClientVote().getProposalIpfsHash()} is not found!`);
+                throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.clientVote.proposalIpfsHash} is not found!`);
             }
         } else {
             throw new Error(`Creating vote failed. Vote client signature is not valid.`);

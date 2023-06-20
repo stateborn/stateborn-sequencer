@@ -23,8 +23,11 @@ const VoteOrm = SEQUELIZE.define('vote', {
     },
 }, {
     indexes: [
-    ]
-});
+        {
+            name: 'vote_user_address_createdAt_index',
+            fields: ['user_address', 'createdAt'],
+        },
+    ]});
 VoteOrm.belongsTo(ProposalOrm, { foreignKey: {name: 'proposal_ipfs_hash', allowNull: false }});
 VoteOrm.belongsTo(UserOrm, { foreignKey: {name: 'user_address', allowNull: false }});
 export {

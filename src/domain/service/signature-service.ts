@@ -1,17 +1,16 @@
-import { ClientProposalDto } from '../../interfaces/dto/client-proposal-dto';
 import { encodeBytes32String, ethers } from 'ethers';
-import { ClientVoteDto } from '../../interfaces/dto/client-vote-dto';
 import { OptionsClientProposalData } from '../model/proposal/options-client-proposal-data';
 import { ProposalType } from '../model/proposal/proposal-type';
 import { Vote } from '../model/vote/vote';
-import { CreateDaoDto } from '../../interfaces/dto/dao/create-dao-dto';
-import { ClientDaoDto } from '../../interfaces/dto/dao/client-dao-dto';
+import { ClientProposal } from '../model/proposal/client-proposal';
+import { ClientVote } from '../model/vote/client-vote';
+import { ClientDao } from '../model/dao/client-dao';
 
 export class SignatureService {
 
-    public isProposalValid(clientProposalDto: ClientProposalDto, signature: string): boolean {
-        const clientProposalToSign: string = ethers.keccak256(this.abiEncodeProposal(clientProposalDto));
-        return this.verifySignatureAndGetAddress(clientProposalToSign, signature, clientProposalDto.creatorAddress);
+    public isProposalValid(clientProposal: ClientProposal, signature: string): boolean {
+        const clientProposalToSign: string = ethers.keccak256(this.abiEncodeProposal(clientProposal));
+        return this.verifySignatureAndGetAddress(clientProposalToSign, signature, clientProposal.creatorAddress);
     }
 
     private verifySignatureAndGetAddress(clientProposalToSign: string, signature: string, sequencerAddress: string) {
@@ -19,26 +18,26 @@ export class SignatureService {
         return derivedAddress.toUpperCase() === sequencerAddress.toUpperCase();
     }
 
-    public isVoteValid(clientVoteDto: ClientVoteDto, signature: string): boolean {
-        const clientProposalToSign: string = ethers.keccak256(this.abiEncodeVote(clientVoteDto));
+    public isVoteValid(clientVote: ClientVote, signature: string): boolean {
+        const clientProposalToSign: string = ethers.keccak256(this.abiEncodeVote(clientVote));
         const derivedAddress = ethers.verifyMessage(ethers.getBytes(clientProposalToSign), signature);
-        return derivedAddress.toUpperCase() === clientVoteDto.getVoterAddress().toUpperCase();
+        return derivedAddress.toUpperCase() === clientVote.voterAddress.toUpperCase();
     }
 
-    private abiEncodeProposal(clientProposalDto: ClientProposalDto): string {
+    private abiEncodeProposal(clientProposal: ClientProposal): string {
         const types = ["address", "bytes", "bytes", "bytes", "bytes32", "bytes32", "bytes32", 'uint256'];
         const values = [
-            clientProposalDto.creatorAddress,
-            ethers.toUtf8Bytes(clientProposalDto.daoIpfsHash),
-            ethers.toUtf8Bytes(clientProposalDto.title),
-            ethers.toUtf8Bytes(clientProposalDto.description),
-            encodeBytes32String(clientProposalDto.proposalType),
-            encodeBytes32String(clientProposalDto.startDateUtc),
-            encodeBytes32String(clientProposalDto.endDateUtc),
-            Number(clientProposalDto.blockNumber)];
-        if (clientProposalDto.proposalType === ProposalType.OPTIONS) {
+            clientProposal.creatorAddress,
+            ethers.toUtf8Bytes(clientProposal.daoIpfsHash),
+            ethers.toUtf8Bytes(clientProposal.title),
+            ethers.toUtf8Bytes(clientProposal.description),
+            encodeBytes32String(clientProposal.proposalType),
+            encodeBytes32String(clientProposal.startDateUtc),
+            encodeBytes32String(clientProposal.endDateUtc),
+            Number(clientProposal.blockNumber)];
+        if (clientProposal.proposalType === ProposalType.OPTIONS) {
             types.push('bytes');
-            const options = (<OptionsClientProposalData>clientProposalDto.data).options.join('');
+            const options = (<OptionsClientProposalData>clientProposal.data).options.join('');
             values.push(ethers.toUtf8Bytes(options));
         }
         // Same as `abi.encodePacked` in Solidity
@@ -46,7 +45,7 @@ export class SignatureService {
     }
 
     public getEncodedVoteKeccak256(vote: Vote, proposalIpfsHash: string): string {
-        return ethers.keccak256(this.abiEncodeVote(new ClientVoteDto(
+        return ethers.keccak256(this.abiEncodeVote(new ClientVote(
             vote.ipfsVote.clientVote.voterAddress,
             proposalIpfsHash,
             vote.ipfsVote.clientVote.vote,
@@ -54,44 +53,41 @@ export class SignatureService {
         )));
     }
 
-    private abiEncodeVote(clientVoteDto: ClientVoteDto): string {
+    private abiEncodeVote(clientVote: ClientVote): string {
         // Same as `abi.encodePacked` in Solidity
         return ethers.solidityPacked(
             ["address", "bytes", "bytes32", "uint32"],
             [
-                clientVoteDto.getVoterAddress(),
-                ethers.toUtf8Bytes(clientVoteDto.getProposalIpfsHash()),
-                encodeBytes32String(clientVoteDto.getVote()),
-                Number(clientVoteDto.getVotingPower())
+                clientVote.voterAddress,
+                ethers.toUtf8Bytes(clientVote.proposalIpfsHash),
+                encodeBytes32String(clientVote.vote),
+                Number(clientVote.votingPower)
             ]
         );
     }
 
-    public isDaoValid(clientDaoDto: ClientDaoDto, signature: string, expectedAddress: string): boolean {
-        const clientProposalToSign: string = ethers.keccak256(this.abiEncodeDao(clientDaoDto));
+    public isDaoValid(clientDao: ClientDao, signature: string, expectedAddress: string): boolean {
+        const clientProposalToSign: string = ethers.keccak256(this.abiEncodeDao(clientDao));
         return this.verifySignatureAndGetAddress(clientProposalToSign, signature, expectedAddress);
     }
 
-    private abiEncodeDao(clientDaoDto: ClientDaoDto): string {
+    private abiEncodeDao(clientDao: ClientDao): string {
         const types = ["bytes", "bytes", "bytes", "uint32", "uint32", "bytes32", "address", "bytes32"];
         const values = [
-            ethers.toUtf8Bytes(clientDaoDto.name),
-            ethers.toUtf8Bytes(clientDaoDto.description),
-            ethers.toUtf8Bytes(clientDaoDto.imageBase64),
-            Number(clientDaoDto.proposalTokenRequiredQuantity),
-            Number(clientDaoDto.ownersMultisigThreshold),
-            encodeBytes32String(clientDaoDto.token.type),
-            clientDaoDto.token.address,
-            encodeBytes32String(clientDaoDto.token.network),
+            ethers.toUtf8Bytes(clientDao.name),
+            ethers.toUtf8Bytes(clientDao.description),
+            ethers.toUtf8Bytes(clientDao.imageBase64),
+            Number(clientDao.proposalTokenRequiredQuantity),
+            Number(clientDao.ownersMultisigThreshold),
+            encodeBytes32String(clientDao.token.type),
+            clientDao.token.address,
+            encodeBytes32String(clientDao.token.network),
         ];
-        for (const owner of clientDaoDto.owners) {
+        for (const owner of clientDao.owners) {
             types.push('address');
             values.push(owner);
         }
         // Same as `abi.encodePacked` in Solidity
         return ethers.solidityPacked(types, values);
     }
-
-
-
 }

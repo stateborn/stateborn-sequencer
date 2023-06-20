@@ -21,7 +21,7 @@ export class GetProposalService {
     public async getProposal(ipfsHash: string) {
         let proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
         if (proposalWithReport !== undefined) {
-            if (isExpired(proposalWithReport.proposal.getIpfsProposal().clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
+            if (isExpired(proposalWithReport.proposal.ipfsProposal.clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
                 // generating report
                 await this.proposalReportService.calculateReport(ipfsHash);
                 // re-read proposal
@@ -36,7 +36,7 @@ export class GetProposalService {
     public async getProposalReport(ipfsHash: string) {
         let proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
         if (proposalWithReport !== undefined) {
-            if (isExpired(proposalWithReport.proposal.getIpfsProposal().clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
+            if (isExpired(proposalWithReport.proposal.ipfsProposal.clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
                 // generating report
                 await this.proposalReportService.calculateReport(ipfsHash);
                 // re-read proposal

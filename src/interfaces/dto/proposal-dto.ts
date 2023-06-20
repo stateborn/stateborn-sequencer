@@ -1,10 +1,10 @@
 import { AutoMap } from '@automapper/classes';
-import { ClientProposalDto } from './client-proposal-dto';
+import { ClientProposal } from '../../domain/model/proposal/client-proposal';
 
 export class ProposalDto {
 
-    @AutoMap(() => ClientProposalDto)
-    clientProposal: ClientProposalDto;
+    @AutoMap(() => ClientProposal)
+    clientProposal: ClientProposal;
 
     @AutoMap()
     creatorSignature: string;
@@ -12,7 +12,7 @@ export class ProposalDto {
     @AutoMap()
     ipfsHash: string;
 
-    constructor(clientProposal: ClientProposalDto, creatorSignature: string, ipfsHash: string) {
+    constructor(clientProposal: ClientProposal, creatorSignature: string, ipfsHash: string) {
         this.clientProposal = clientProposal;
         this.creatorSignature = creatorSignature;
         this.ipfsHash = ipfsHash;

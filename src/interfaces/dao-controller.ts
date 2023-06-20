@@ -62,6 +62,17 @@ export class DaoController {
         return mapperService.toDaoDto(dao!);
     }
 
+
+    @Get('/:daoIpfsHash/proposals/count')
+    async getDaosProposalsCount(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Param('daoIpfsHash') daoIpfsHash: string) {
+        const dpProposalRepository = <IDbDaoRepository>DI_CONTAINER.resolve('dbDaoRepository');
+        const num = await dpProposalRepository.countProposals(daoIpfsHash);
+        return { count: num.toFixed(0) };
+    }
+
     @Get('/:daoIpfsHash/proposals')
     async getProposalHeaders(
         @Res() res: Response,

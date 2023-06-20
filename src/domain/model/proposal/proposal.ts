@@ -14,12 +14,4 @@ export class Proposal {
         this.ipfsProposal = ipfsProposal;
         this.ipfsHash = ipfsHash;
     }
-
-    public getIpfsProposal(): IpfsProposal {
-        return this.ipfsProposal;
-    }
-
-    public getIpfsHash(): string {
-        return this.ipfsHash;
-    }
 }

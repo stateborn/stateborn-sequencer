@@ -2,8 +2,6 @@ import { ethers, InterfaceAbi } from 'ethers';
 import { IEthProvider } from '../i-eth-provider';
 import { DaoToken } from '../../domain/model/dao/dao-token';
 import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
-import { getProperty } from '../env-var/env-var-service';
-import { constructUsing } from '@automapper/core';
 
 const {Alchemy, Network, Utils} = require("alchemy-sdk");
 

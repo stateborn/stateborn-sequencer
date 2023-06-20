@@ -1,5 +1,5 @@
-import { ClientProposal } from './client-proposal';
 import { AutoMap } from '@automapper/classes';
+import { ClientProposal } from './client-proposal';
 
 export class IpfsProposal {
 

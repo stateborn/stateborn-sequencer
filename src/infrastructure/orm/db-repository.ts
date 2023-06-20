@@ -3,7 +3,7 @@ import { ProposalOrm } from './model/proposal-orm';
 import { IDbSequencerRepository } from '../../domain/repository/i-db-sequencer-repository';
 import { Sequencer } from '../../domain/model/sequencer';
 import { SequencerOrm } from './model/sequencer-orm';
-import { col, fn, Model, Op } from 'sequelize';
+import { col, fn, Model, Op, QueryTypes } from 'sequelize';
 import { Proposal } from '../../domain/model/proposal/proposal';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { ClientProposal } from '../../domain/model/proposal/client-proposal';
@@ -28,10 +28,10 @@ import { TokenOrm } from './model/dao/token-orm';
 import { DaoToken } from '../../domain/model/dao/dao-token';
 import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 import { Dao } from '../../domain/model/dao/dao';
-import { ClientDaoDto } from '../../interfaces/dto/dao/client-dao-dto';
-import { ClientDaoTokenDto } from '../../interfaces/dto/dao/client-dao-token-dto';
 import { SEQUELIZE } from './sequelize-connection-service';
 import { DaoHeader } from '../../domain/model/dao/dao-header';
+import { ClientDao } from '../../domain/model/dao/client-dao';
+import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
 
 export class DbRepository implements IDbProposalRepository, IDbSequencerRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
 
@@ -75,14 +75,14 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
         return (p: Model<any, any>) =>
             new Dao(
                 new IpfsDao(
-                    new ClientDaoDto(
+                    new ClientDao(
                         <string>p.get('name', {plain: true}),
                         <string>p.get('description', {plain: true}),
                         <string>p.get('image_base64', {plain: true}),
                         <string[]>p.get('owners', {plain: true}),
                         <string>p.get('owners_multisig_threshold', {plain: true}),
                         <string>p.get('proposal_token_required_quantity', {plain: true}),
-                        new ClientDaoTokenDto(
+                        new ClientDaoToken(
                             (<any>p.get('tokens', {plain: true}))[0].address,
                             (<any>p.get('tokens', {plain: true}))[0].name,
                             (<any>p.get('tokens', {plain: true}))[0].symbol,
@@ -220,17 +220,6 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
         return props.map(_ => <string>_.get('ipfs_hash', {plain: true}));
     }
 
-    public async findProposals(daoIpfsHash: string, offset: number = 0, limit: number = 10): Promise<Proposal[]> {
-        const props = await ProposalOrm.findAll({
-            offset: offset,
-            limit: limit,
-            where: {dao_ipfs_hash: daoIpfsHash},
-            order: [['createdAt', 'DESC']],
-        });
-        return props.map(this.toProposal());
-    }
-
-
     private toProposal() {
         return (p: Model<any, any>) =>
             new Proposal(
@@ -283,7 +272,8 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                         <YesNoVote>p.get('vote', {plain: true}),
                         (<Number>p.get('voting_power', {plain: true})).toString()),
                     <string>p.get('sequencer_signature', {plain: true})),
-                <string>p.get('id', {plain: true}), <string>p.get('ipfs_hash', {plain: true}),
+                <string>p.get('id', {plain: true}),
+                <string>p.get('ipfs_hash', {plain: true}),
                 <Date>p.get('createdAt', {plain: true}));
     }
 
@@ -297,11 +287,16 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
     }
 
     async findAllVotesOldestFirst(proposalIpfsHash: string): Promise<Vote[]> {
-        const props = await VoteOrm.findAll({
-            include: [{model: ProposalOrm, where: {ipfs_hash: proposalIpfsHash}}],
-            order: [['createdAt', 'ASC']],
-        });
-        return props.map(this.toVote());
+        try {
+            const props = await VoteOrm.findAll({
+                include: [{model: ProposalOrm, where: {ipfs_hash: proposalIpfsHash}}],
+                order: [['createdAt', 'ASC']],
+            });
+            return props.map(this.toVote());
+        } catch (Err) {
+            console.log(Err);
+            return [];
+        }
     }
 
     async saveProposalReport(proposalReport: ProposalReport): Promise<void> {
@@ -336,4 +331,28 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
         return await DaoOrm.count();
     }
 
+    async countVotes(proposalIpfsHash: string): Promise<number> {
+        return await VoteOrm.count({
+            where: {
+                proposal_ipfs_hash: proposalIpfsHash,
+            }
+        });
+    }
+
+    async countDistinctVotes(proposalIpfsHash: string): Promise<number> {
+        const totalVotes = await SEQUELIZE.query(`
+            SELECT COUNT(*) as total_votes
+            FROM (SELECT DISTINCT
+                  ON (votes.user_address) votes.*
+                  FROM votes
+                      INNER JOIN proposals
+                  ON votes.proposal_ipfs_hash = proposals.ipfs_hash
+                  WHERE proposals.ipfs_hash = :hash
+                  ORDER BY votes.user_address, votes."createdAt" DESC) as distinct_votes`, {
+            replacements: {hash: proposalIpfsHash},
+            type: QueryTypes.SELECT,
+        });
+        // @ts-ignore
+        return Number(totalVotes[0].total_votes).toFixed(0);
+    }
 }

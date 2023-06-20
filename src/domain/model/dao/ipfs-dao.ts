@@ -1,16 +1,16 @@
 import { AutoMap } from '@automapper/classes';
-import { ClientDaoDto } from '../../../interfaces/dto/dao/client-dao-dto';
+import { ClientDao } from './client-dao';
 
 export class IpfsDao {
 
-    @AutoMap(() => ClientDaoDto)
-    clientDao: ClientDaoDto;
+    @AutoMap(() => ClientDao)
+    clientDao: ClientDao;
 
     @AutoMap()
     signature: string;
 
-    constructor(dao: ClientDaoDto, signature: string) {
-        this.clientDao = dao;
+    constructor(clientDao: ClientDao, signature: string) {
+        this.clientDao = clientDao;
         this.signature = signature;
     }
 }
