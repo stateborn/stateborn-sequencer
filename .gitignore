@@ -41,3 +41,4 @@ DEADJOE
 # Idea run configuration
 .run/
 volumes/
+.build_docker.sh

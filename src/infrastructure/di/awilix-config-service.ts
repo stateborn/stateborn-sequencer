@@ -11,8 +11,11 @@ import { ProposalReportService } from '../../application/proposal-report-service
 import { MerkleTreeService } from '../../application/merkle-tree-service';
 import { GetProposalService } from '../../application/get-proposal-service';
 import { CreateDaoService } from '../../application/dao/create-dao-service';
-import { AlchemyEthProvider } from '../alchemy-eth-provider';
+import { EthNetworkProvider } from '../eth-network-provider';
 import { TokenDataService } from '../../application/dao/token-data-service';
+import { ArbitrumNetworkProvider } from '../arbitrum-network-provider';
+import { NetworkProviderService } from '../network-provider-service';
+import { PolygonNetworkProvider } from '../polygon-network-provider';
 
 export const DI_CONTAINER = createContainer({
     injectionMode: InjectionMode.PROXY
@@ -69,7 +72,16 @@ export const initializeAwilixDI = () => {
         dbDaoRepository: asClass(DbRepository, {
             lifetime: Lifetime.SINGLETON,
         }),
-        ethProvider: asClass(AlchemyEthProvider, {
+        ethNetworkProvider: asClass(EthNetworkProvider, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        polygonNetworkProvider: asClass(PolygonNetworkProvider, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        arbitrumNetworkProvider: asClass(ArbitrumNetworkProvider, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        networkProviderService: asClass(NetworkProviderService, {
             lifetime: Lifetime.SINGLETON,
         }),
         tokenDataService: asClass(TokenDataService, {

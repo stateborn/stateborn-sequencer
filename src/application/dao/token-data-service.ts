@@ -1,7 +1,7 @@
 import { ethers, InterfaceAbi } from 'ethers';
-import { IEthProvider } from '../i-eth-provider';
 import { DaoToken } from '../../domain/model/dao/dao-token';
 import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
+import { NetworkProviderService } from '../../infrastructure/network-provider-service';
 
 const {Alchemy, Network, Utils} = require("alchemy-sdk");
 
@@ -26,16 +26,16 @@ export class TokenDataService {
         'function tokenURI(uint256 tokenId) view returns (string)',
     ];
 
-    private ethProvider: IEthProvider;
+    private networkProviderService: NetworkProviderService;
 
 
-    constructor({ethProvider}: { ethProvider: IEthProvider }) {
-        this.ethProvider = ethProvider;
+    constructor({networkProviderService}: { networkProviderService: NetworkProviderService }) {
+        this.networkProviderService = networkProviderService;
     }
 
-    async getBalanceOfAddressAtBlock(tokenAddress: string, userAddress: string, block: number): Promise<string> {
+    async getBalanceOfAddressAtBlock(tokenAddress: string, userAddress: string, block: number, chainId: string): Promise<string> {
         try {
-            const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.ethProvider.getProvider());
+            const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
             // @ts-ignore
             const res = await contract.balanceOf(userAddress, {blockTag: block});
             const res2 = ethers.formatUnits(res, 18);
@@ -74,18 +74,19 @@ export class TokenDataService {
     // }
 
 
-    async readTokenData(tokenAddress: string): Promise<DaoToken | undefined> {
+    async readTokenData(tokenAddress: string, chainId: string): Promise<DaoToken | undefined> {
         try {
-            const {nameRes, symbolRes} = await this.readNftTokenData(tokenAddress);
-            return new DaoToken(tokenAddress, nameRes, symbolRes, DaoTokenType.NFT, 'mainnet', undefined);
+            const {nameRes, symbolRes} = await this.readNftTokenData(tokenAddress, chainId);
+            return new DaoToken(tokenAddress, nameRes, symbolRes, DaoTokenType.NFT, chainId);
         } catch (err) {
             try {
-                const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.ethProvider.getProvider());
+                const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
                 const nameRes = await contract.name();
                 const symbolRes = await contract.symbol();
-                const supplyRes = await contract.totalSupply();
-                console.log(`Token ${tokenAddress} data : ${nameRes} ${symbolRes} ${supplyRes.toString()}`);
-                return new DaoToken(tokenAddress, nameRes, symbolRes, DaoTokenType.ERC20, 'mainnet', {supply: supplyRes.toString()});
+                // big int
+                const supplyRes = (await contract.totalSupply()).toString();
+                console.log(`Token ${tokenAddress} data : ${nameRes} ${symbolRes} ${supplyRes}`);
+                return new DaoToken(tokenAddress, nameRes, symbolRes, DaoTokenType.ERC20, chainId, Number(supplyRes));
             } catch (err) {
                 console.log(`Error reading token ${tokenAddress} data`, err);
                 return undefined;
@@ -93,9 +94,9 @@ export class TokenDataService {
         }
     }
 
-    private async readNftTokenData(tokenAddress: string): Promise<any> {
+    private async readNftTokenData(tokenAddress: string, chainId: string): Promise<any> {
         try {
-            const contract = new ethers.Contract(tokenAddress, this.ERC_721_ABI, this.ethProvider.getProvider());
+            const contract = new ethers.Contract(tokenAddress, this.ERC_721_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
             const nameRes = await contract.name();
             const symbolRes = await contract.symbol();
             await contract.tokenURI(0);

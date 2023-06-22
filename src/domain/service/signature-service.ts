@@ -81,7 +81,7 @@ export class SignatureService {
             Number(clientDao.ownersMultisigThreshold),
             encodeBytes32String(clientDao.token.type),
             clientDao.token.address,
-            encodeBytes32String(clientDao.token.network),
+            encodeBytes32String(clientDao.token.chainId),
         ];
         for (const owner of clientDao.owners) {
             types.push('address');

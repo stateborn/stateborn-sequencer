@@ -2,9 +2,9 @@ import { ethers } from 'ethers';
 import { getProperty } from '../application/env-var/env-var-service';
 import { IEthProvider } from '../application/i-eth-provider';
 
-export class AlchemyEthProvider implements IEthProvider {
+export class PolygonNetworkProvider implements IEthProvider {
 
-    private provider = new ethers.AlchemyProvider('mainnet', getProperty('ALCHEMY_API_KEY'));
+    private provider = new ethers.AlchemyProvider(137, getProperty('ALCHEMY_POLYGON_API_KEY'));
 
     getProvider(): ethers.AlchemyProvider {
         return this.provider;

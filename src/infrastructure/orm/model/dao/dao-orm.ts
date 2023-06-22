@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
 import { SEQUELIZE } from '../../sequelize-connection-service';
-import { ProposalOrm } from '../proposal-orm';
 
 const DaoOrm = SEQUELIZE.define('dao', {
     ipfs_hash: {
@@ -30,6 +29,11 @@ const DaoOrm = SEQUELIZE.define('dao', {
     },
     proposal_token_required_quantity: {
         type: DataTypes.INTEGER,
+    },
+    //client creation date
+    creation_date_utc: {
+        type: DataTypes.DATE,
+        allowNull: false
     },
 });
 export {

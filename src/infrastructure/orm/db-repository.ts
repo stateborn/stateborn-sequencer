@@ -82,12 +82,15 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                         <string[]>p.get('owners', {plain: true}),
                         <string>p.get('owners_multisig_threshold', {plain: true}),
                         <string>p.get('proposal_token_required_quantity', {plain: true}),
+                        (<Date>p.get('creation_date_utc', {plain: true})).toISOString(),
                         new ClientDaoToken(
                             (<any>p.get('tokens', {plain: true}))[0].address,
                             (<any>p.get('tokens', {plain: true}))[0].name,
                             (<any>p.get('tokens', {plain: true}))[0].symbol,
                             (<any>p.get('tokens', {plain: true}))[0].type,
-                            (<any>p.get('tokens', {plain: true}))[0].network,
+                            (<any>p.get('tokens', {plain: true}))[0].chain_id,
+                            (<any>p.get('tokens', {plain: true}))[0].total_supply !== null ?
+                                (<any>p.get('tokens', {plain: true}))[0].total_supply.toString() : undefined,
                         )),
                     <string>p.get('signature', {plain: true})),
                 <string>p.get('ipfs_hash', {plain: true}));
@@ -104,6 +107,7 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                 owners: ipfsDao.clientDao.owners,
                 owners_multisig_threshold: ipfsDao.clientDao.ownersMultisigThreshold,
                 proposal_token_required_quantity: ipfsDao.clientDao.proposalTokenRequiredQuantity,
+                creation_date_utc: ipfsDao.clientDao.creationDateUtc,
             });
             // @ts-ignore
             await dao.addToken(token);
@@ -144,7 +148,8 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             <string>data.get('name', {plain: true}),
             <string>data.get('symbol', {plain: true}),
             <DaoTokenType>data.get('type', {plain: true}),
-            <string>data.get('network', {plain: true}),
+            <string>data.get('chain_id', {plain: true}),
+            <number | undefined>data.get('total_supply', {plain: true}),
             <any>data.get('data', {plain: true}),
             <any>data.get('id', {plain: true}),
         );
@@ -156,7 +161,8 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             name: daoToken.name,
             symbol: daoToken.symbol,
             type: daoToken.type,
-            network: daoToken.network,
+            chain_id: daoToken.chainId,
+            total_supply: daoToken.totalSupply,
             data: daoToken.data,
         };
     }

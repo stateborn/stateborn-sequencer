@@ -3,7 +3,6 @@ import { SEQUELIZE } from '../sequelize-connection-service';
 import { ProposalTypeOrm } from './proposal-type-orm';
 import { SequencerOrm } from './sequencer-orm';
 import { ProposalReportOrm } from './proposal-report-orm';
-import { Dao } from '../../../domain/model/dao/dao';
 import { DaoOrm } from './dao/dao-orm';
 
 const ProposalOrm = SEQUELIZE.define('proposal', {

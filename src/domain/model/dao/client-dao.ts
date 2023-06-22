@@ -1,5 +1,14 @@
 import { AutoMap } from '@automapper/classes';
-import { IsArray, IsDefined, IsNotEmpty, IsNumberString, IsString, MaxLength, ValidateNested } from 'class-validator';
+import {
+    IsArray,
+    IsDefined,
+    IsISO8601,
+    IsNotEmpty,
+    IsNumberString,
+    IsString,
+    MaxLength,
+    ValidateNested
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ClientDaoToken } from './client-dao-token';
 
@@ -40,17 +49,25 @@ export class ClientDao {
     proposalTokenRequiredQuantity: string;
 
     @AutoMap()
+    @IsString()
+    @IsDefined()
+    @IsISO8601()
+    creationDateUtc: string;
+
+    @AutoMap()
     @ValidateNested()
     @Type(() => ClientDaoToken)
     token: ClientDaoToken;
 
-    constructor(name: string, description: string, imageBase64: string, owners: string[], ownersMultisigThreshold: string, proposalTokenRequiredQuantity: string, token: ClientDaoToken) {
+    constructor(name: string, description: string, imageBase64: string, owners: string[], ownersMultisigThreshold: string, proposalTokenRequiredQuantity: string,
+                creationDateUtc: string, token: ClientDaoToken) {
         this.name = name;
         this.description = description;
         this.imageBase64 = imageBase64;
         this.owners = owners;
         this.ownersMultisigThreshold = ownersMultisigThreshold;
         this.proposalTokenRequiredQuantity = proposalTokenRequiredQuantity;
+        this.creationDateUtc = creationDateUtc;
         this.token = token;
     }
 }
