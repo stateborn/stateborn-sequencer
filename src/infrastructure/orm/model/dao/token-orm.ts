@@ -24,13 +24,12 @@ const TokenOrm = SEQUELIZE.define('token', {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    // only for ERC-20
-    total_supply: {
-        type: DataTypes.BIGINT,
-        allowNull: true,
-    },
     chain_id: {
         type: DataTypes.STRING,
+        allowNull: false
+    },
+    decimals: {
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     data: {

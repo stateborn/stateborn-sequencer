@@ -11,7 +11,6 @@ import { GetProposalService } from '../application/get-proposal-service';
 import { Response } from 'express-serve-static-core';
 import { ProposalReportDto } from './dto/report/proposal-report-dto';
 import { ProposalDto } from './dto/proposal-dto';
-import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -37,7 +36,7 @@ export class ProposalController {
     async createProposal(
             @Res() res: Response,
             @Req() req: Request,
-            @Body({ required: true, options: { limit: '5MB' } }) createProposalDto: CreateProposalDto) {
+            @Body({ required: true, options: { limit: '2MB' } }) createProposalDto: CreateProposalDto) {
         const createProposalService = <CreateProposalService>DI_CONTAINER.resolve('createProposalService');
         await createProposalService.createProposal(createProposalDto);
         return res.sendStatus(200);

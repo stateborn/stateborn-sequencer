@@ -8,8 +8,8 @@ import { IIpfsRepository } from '../../domain/repository/i-ipfs-repository';
 import { LOGGER } from '../../infrastructure/pino-logger-service';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
 import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
-import dayjs from 'dayjs';
-import { isDateAAfterB, isDateCreatedInLast5minutes } from '../date-service';
+import { isDateCreatedInLast5minutes } from '../date-service';
+import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 
 export class CreateDaoService {
 
@@ -38,7 +38,8 @@ export class CreateDaoService {
         const signatureValid = this.signatureService.isDaoValid(createDaoDto.clientDao, createDaoDto.signature, createDaoDto.creatorAddress);
         if (signatureValid) {
             if (this.networkProviderService.isSupportedChainId(createDaoDto.clientDao.token.chainId)) {
-                const token: DaoToken | undefined = await this.tokenDataService.readTokenData(createDaoDto.clientDao.token.address, createDaoDto.clientDao.token.chainId);
+                const token: DaoToken | undefined = await this.tokenDataService.readTokenData(
+                    createDaoDto.clientDao.token.address, createDaoDto.clientDao.token.chainId);
                 if (token) {
                     const clientTokenMatchesReadToken = this.doesClientTokenDataMatchReadTokenData(createDaoDto.clientDao.token, token);
                     if (clientTokenMatchesReadToken) {
@@ -73,9 +74,8 @@ export class CreateDaoService {
         return clientDaoToken.address === daoToken.address
             && clientDaoToken.name === daoToken.name
             && clientDaoToken.symbol === daoToken.symbol
-            // token supply can...
-            && (daoToken.totalSupply !== undefined ? (Number(clientDaoToken.totalSupply) <= daoToken.totalSupply) : true)
-            && clientDaoToken.type === daoToken.type;
+            && clientDaoToken.type === daoToken.type
+            && clientDaoToken?.decimals === daoToken.decimals.toString();
     }
 
     private validateRestOfPropertiesAndThrowErrorIfNeeded = (createDaoDto: CreateDaoDto) => {

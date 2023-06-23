@@ -89,8 +89,7 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                             (<any>p.get('tokens', {plain: true}))[0].symbol,
                             (<any>p.get('tokens', {plain: true}))[0].type,
                             (<any>p.get('tokens', {plain: true}))[0].chain_id,
-                            (<any>p.get('tokens', {plain: true}))[0].total_supply !== null ?
-                                (<any>p.get('tokens', {plain: true}))[0].total_supply.toString() : undefined,
+                            (<any>p.get('tokens', {plain: true}))[0].decimals.toString(),
                         )),
                     <string>p.get('signature', {plain: true})),
                 <string>p.get('ipfs_hash', {plain: true}));
@@ -139,20 +138,26 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
     }
 
     async findOrCreateDaoToken(daoToken: DaoToken): Promise<DaoToken> {
-        const [data, created] = await TokenOrm.findOrCreate({
-            where: {address: daoToken.address},
-            defaults: this.daoTokenToUnsavedTokenOrm(daoToken)
-        });
-        return new DaoToken(
-            <string>data.get('address', {plain: true}),
-            <string>data.get('name', {plain: true}),
-            <string>data.get('symbol', {plain: true}),
-            <DaoTokenType>data.get('type', {plain: true}),
-            <string>data.get('chain_id', {plain: true}),
-            <number | undefined>data.get('total_supply', {plain: true}),
-            <any>data.get('data', {plain: true}),
-            <any>data.get('id', {plain: true}),
-        );
+        try {
+
+            const [data, created] = await TokenOrm.findOrCreate({
+                where: {address: daoToken.address},
+                defaults: this.daoTokenToUnsavedTokenOrm(daoToken)
+            });
+            return new DaoToken(
+                <string>data.get('address', {plain: true}),
+                <string>data.get('name', {plain: true}),
+                <string>data.get('symbol', {plain: true}),
+                <DaoTokenType>data.get('type', {plain: true}),
+                <string>data.get('chain_id', {plain: true}),
+                <any>data.get('data', {plain: true}),
+                <any>data.get('decimals', {plain: true}),
+                <any>data.get('id', {plain: true}),
+            );
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
     }
 
     private daoTokenToUnsavedTokenOrm(daoToken: DaoToken) {
@@ -162,8 +167,8 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             symbol: daoToken.symbol,
             type: daoToken.type,
             chain_id: daoToken.chainId,
-            total_supply: daoToken.totalSupply,
             data: daoToken.data,
+            decimals: daoToken.decimals,
         };
     }
 

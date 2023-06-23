@@ -1,5 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { IsEnum, IsNumberString, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumberString, IsOptional, IsString, isValidationOptions } from 'class-validator';
 import { DaoTokenType } from '../../../domain/model/dao/dao-token-type';
 
 export class ClientDaoToken {
@@ -25,16 +25,16 @@ export class ClientDaoToken {
     chainId: string;
 
     @AutoMap()
-    @IsOptional()
     @IsNumberString()
-    totalSupply?: string;
+    decimals: string;
 
-    constructor(address: string, name: string, symbol: string, type: DaoTokenType, chainId: string, totalSupply?: string) {
+
+    constructor(address: string, name: string, symbol: string, type: DaoTokenType, chainId: string, decimals: string) {
         this.address = address;
         this.name = name;
         this.symbol = symbol;
         this.type = type;
         this.chainId = chainId;
-        this.totalSupply = totalSupply;
+        this.decimals = decimals;
     }
 }
