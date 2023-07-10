@@ -15,7 +15,7 @@ const main = async () => {
     const app = createExpressServer({
         controllers: [`${__dirname}/interfaces/**/*`],
     });
-    // app.use(PINO_LOGGER_INSTANCE);
+    app.use(PINO_LOGGER_INSTANCE);
 
 // run express application on port 3000
     app.listen(8000, () => {

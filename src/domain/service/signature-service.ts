@@ -25,7 +25,7 @@ export class SignatureService {
     }
 
     private abiEncodeProposal(clientProposal: ClientProposal): string {
-        const types = ["address", "bytes", "bytes", "bytes", "bytes32", "bytes32", "bytes32", 'uint256'];
+        const types = ["address", "bytes", "bytes", "bytes", "bytes32", "bytes32", "bytes32", "uint256"];
         const values = [
             clientProposal.creatorAddress,
             ethers.toUtf8Bytes(clientProposal.daoIpfsHash),
@@ -34,7 +34,8 @@ export class SignatureService {
             encodeBytes32String(clientProposal.proposalType),
             encodeBytes32String(clientProposal.startDateUtc),
             encodeBytes32String(clientProposal.endDateUtc),
-            Number(clientProposal.blockNumber)];
+            Number(clientProposal.blockNumber)
+        ];
         if (clientProposal.proposalType === ProposalType.OPTIONS) {
             types.push('bytes');
             const options = (<OptionsClientProposalData>clientProposal.data).options.join('');
@@ -56,12 +57,12 @@ export class SignatureService {
     private abiEncodeVote(clientVote: ClientVote): string {
         // Same as `abi.encodePacked` in Solidity
         return ethers.solidityPacked(
-            ["address", "bytes", "bytes32", "uint32"],
+            ["address", "bytes", "bytes32", "uint256"],
             [
                 clientVote.voterAddress,
                 ethers.toUtf8Bytes(clientVote.proposalIpfsHash),
                 encodeBytes32String(clientVote.vote),
-                Number(clientVote.votingPower)
+                Number(clientVote.votingPower),
             ]
         );
     }
@@ -72,7 +73,7 @@ export class SignatureService {
     }
 
     private abiEncodeDao(clientDao: ClientDao): string {
-        const types = ["bytes", "bytes", "bytes", "uint32", "uint32", "bytes32", "address", "bytes32"];
+        const types = ["bytes", "bytes", "bytes", "uint256", "uint256", "bytes32", "address", "bytes32"];
         const values = [
             ethers.toUtf8Bytes(clientDao.name),
             ethers.toUtf8Bytes(clientDao.description),

@@ -8,4 +8,6 @@ export default {
     ALCHEMY_API_KEY: undefined,
     IPFS_HOST: '127.0.0.1',
     IPFS_PORT: '5001',
+    DEVELOPMENT_FAKE_TOKENS_MODE: 'false',
+    DEVELOPMENT_FAKE_TOKENS_AMOUNT: '199',
 }

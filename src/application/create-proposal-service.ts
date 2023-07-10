@@ -8,9 +8,9 @@ import { LOGGER } from '../infrastructure/pino-logger-service';
 import { TokenDataService } from './dao/token-data-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
-import { isDateCreatedInLast5minutes, isDateInTheFuture, isUtcDateAAfterB } from './date-service';
+import { isDateCreatedInLast5minutes, isDateInTheFuture, isUtcDateAEqualOrAfterB } from './date-service';
 import { ProposalType } from '../domain/model/proposal/proposal-type';
-import { DaoTokenType } from '../domain/model/dao/dao-token-type';
+import { getBooleanProperty } from './env-var/env-var-service';
 
 export class CreateProposalService {
 
@@ -21,7 +21,9 @@ export class CreateProposalService {
     private readonly mapperService: IMapperService;
     private readonly signatureService: SignatureService;
     private readonly tokenDataService: TokenDataService;
-
+    // Client provides block number based on which token balance is read
+    // this block number cannot be lower than (latest block number) - BLOCKS_TOLERANCE
+    public static readonly BLOCKS_TOLERANCE: number = 10;
     constructor({
                     ipfsRepository,
                     dbProposalRepository,
@@ -54,15 +56,13 @@ export class CreateProposalService {
         if (signatureValid) {
             const dao: Dao | undefined = await this.dbDaoRepository.findDao(createProposalDto.clientProposal.daoIpfsHash);
             if (dao !== undefined) {
-                let userTokenBalanceAtProposalBlock;
-                if (dao.ipfsDao.clientDao.token.type === DaoTokenType.ERC20) {
-                    userTokenBalanceAtProposalBlock = await this.tokenDataService.getBalanceOfAddressAtBlock(
-                        dao.ipfsDao.clientDao.token.address, Number(dao.ipfsDao.clientDao.token.decimals), createProposalDto.clientProposal.creatorAddress,
-                        Number(createProposalDto.clientProposal.blockNumber), dao.ipfsDao.clientDao.token.chainId);
-                } else {
-                    // TODO for nft
-                    userTokenBalanceAtProposalBlock = '1';
-                }
+                await this.validateClientBlockNumberAndThrowErrorIfNeeded(createProposalDto.clientProposal.blockNumber, dao.ipfsDao.clientDao.token.chainId);
+                const userTokenBalanceAtProposalBlock = await this.tokenDataService.getBalanceOfAddressAtBlock(
+                    dao.ipfsDao.clientDao.token.address,
+                    Number(dao.ipfsDao.clientDao.token.decimals),
+                    createProposalDto.clientProposal.creatorAddress,
+                    Number(createProposalDto.clientProposal.blockNumber),
+                    dao.ipfsDao.clientDao.token.chainId);
                 if (Number(userTokenBalanceAtProposalBlock) >= Number(dao.ipfsDao.clientDao.proposalTokenRequiredQuantity)) {
                     if (this.areProposalDatesCorrect(createProposalDto)) {
                         if (createProposalDto.clientProposal.proposalType === ProposalType.OPTIONS) {
@@ -76,31 +76,34 @@ export class CreateProposalService {
                                 throw new Error(`Creating proposal failed. For proposal type ${createProposalDto.clientProposal.proposalType} data must be undefined!`);
                             }
                         }
-                        const latestTokenBlock = await this.tokenDataService.getBlockNumber(dao.ipfsDao.clientDao.token.chainId);
-                        if (latestTokenBlock >= Number(createProposalDto.clientProposal.blockNumber)) {
-                            const ipfsProposal = this.mapperService.toIpfsProposal(createProposalDto);
-                            await this.dbSequencerRepository.findOrCreateSequencer(createProposalDto.clientProposal.creatorAddress);
-                            const ipfsHash = await this.ipfsRepository.saveProposal(ipfsProposal);
-                            LOGGER.info(`Proposal saved to IPFS: ${ipfsHash})`);
-                            await this.dbProposalRepository.saveProposal(ipfsProposal, ipfsHash);
-                            LOGGER.info(`Proposal saved ${ipfsHash} to db`);
-                        } else {
-                            throw new Error(`Creating proposal failed. Proposal block number is incorrect. Given ${createProposalDto.clientProposal.blockNumber} but
-                            latest read block number is ${latestTokenBlock}!`);
-                        }
+                        const ipfsProposal = this.mapperService.toIpfsProposal(createProposalDto);
+                        await this.dbSequencerRepository.findOrCreateSequencer(createProposalDto.clientProposal.creatorAddress);
+                        const ipfsHash = await this.ipfsRepository.saveProposal(ipfsProposal);
+                        LOGGER.info(`Proposal saved to IPFS: ${ipfsHash})`);
+                        await this.dbProposalRepository.saveProposal(ipfsProposal, ipfsHash);
+                        LOGGER.info(`Proposal saved ${ipfsHash} to db`);
                     } else {
                         throw new Error(`Creating proposal failed. Proposal dates are not correct. Start date: ${createProposalDto.clientProposal.startDateUtc} 
                             End date: ${createProposalDto.clientProposal.endDateUtc}`);
                     }
                 } else {
-                    throw new Error(`Creating proposal failed. Proposal required tokens to have is ${dao.ipfsDao.clientDao.proposalTokenRequiredQuantity}
-                     but at block ${createProposalDto.clientProposal.blockNumber} user ${createProposalDto.clientProposal.creatorAddress} has ${userTokenBalanceAtProposalBlock}!`);
+                    throw new Error(`Creating proposal failed. Proposal required tokens to have is ${dao.ipfsDao.clientDao.proposalTokenRequiredQuantity} but at block ${createProposalDto.clientProposal.blockNumber} user ${createProposalDto.clientProposal.creatorAddress} has ${userTokenBalanceAtProposalBlock}!`);
                 }
             } else {
                 throw new Error(`Creating proposal failed. DAO with ipfs hash ${createProposalDto.clientProposal.daoIpfsHash} not found!`);
             }
         } else {
             throw new Error(`Creating proposal failed. Proposal client signature is not valid.`);
+        }
+    }
+
+    private async validateClientBlockNumberAndThrowErrorIfNeeded(clientBlockNumber: string, chainId: string): Promise<void> {
+        const latestReadBlockNumber = await this.tokenDataService.getBlockNumber(chainId);
+        if (latestReadBlockNumber < Number(clientBlockNumber)) {
+            throw new Error(`Creating proposal failed. Client given block number ${clientBlockNumber} is below latest read block number ${latestReadBlockNumber}!`);
+        }
+        if (Number(clientBlockNumber) < (latestReadBlockNumber - CreateProposalService.BLOCKS_TOLERANCE)) {
+            throw new Error(`Creating proposal failed. Client given block number ${clientBlockNumber} is below acceptance level (${latestReadBlockNumber} (latest block) - ${CreateProposalService.BLOCKS_TOLERANCE})!`);
         }
     }
 
@@ -114,7 +117,7 @@ export class CreateProposalService {
     private areProposalDatesCorrect(proposal: CreateProposalDto): boolean {
         const proposalStartDateCorrect = isDateCreatedInLast5minutes(proposal.clientProposal.startDateUtc);
         const proposalEndDateInFuture = isDateInTheFuture(proposal.clientProposal.endDateUtc);
-        const areDatesCorrect = isUtcDateAAfterB(proposal.clientProposal.endDateUtc, proposal.clientProposal.startDateUtc);
+        const areDatesCorrect = isUtcDateAEqualOrAfterB(proposal.clientProposal.endDateUtc, proposal.clientProposal.startDateUtc);
         return proposalStartDateCorrect && proposalEndDateInFuture && areDatesCorrect;
     }
 }

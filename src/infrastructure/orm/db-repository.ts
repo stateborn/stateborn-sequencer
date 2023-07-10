@@ -3,7 +3,7 @@ import { ProposalOrm } from './model/proposal-orm';
 import { IDbSequencerRepository } from '../../domain/repository/i-db-sequencer-repository';
 import { Sequencer } from '../../domain/model/sequencer';
 import { SequencerOrm } from './model/sequencer-orm';
-import { col, fn, Model, Op, QueryTypes } from 'sequelize';
+import { col, fn, Model, Op, QueryTypes, where } from 'sequelize';
 import { Proposal } from '../../domain/model/proposal/proposal';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { ClientProposal } from '../../domain/model/proposal/client-proposal';
@@ -216,19 +216,38 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
     }
 
     public async findProposalsIpfsHashes(daoIpfsHash: string, offset: number = 0, limit: number = 10, filter?: string): Promise<string[]> {
-        const whereClause: any = {dao_ipfs_hash: daoIpfsHash};
+        let whereClause: any = {dao_ipfs_hash: daoIpfsHash};
         if (filter !== undefined && filter.trim() !== '') {
-            whereClause.title = {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', `${filter.trim()}:*`)}
-            whereClause.ipfs_hash = {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', filter.trim())}
+            whereClause = {
+                [Op.and] : [
+                    {dao_ipfs_hash: daoIpfsHash},
+                    {
+                        [Op.or]: [
+                            {
+                                title: {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', `${filter.trim()}:*`)}
+                            },
+                            {
+                                ipfs_hash: {[Op.match]: SEQUELIZE.fn('websearch_to_tsquery', filter.trim())},
+                            }
+                        ],
+                    }
+                ],
+            };
         }
-        const props = await ProposalOrm.findAll({
-            offset: offset,
-            limit: limit,
-            where: whereClause,
-            order: [['createdAt', 'DESC']],
-            attributes: ['ipfs_hash'],
-        });
-        return props.map(_ => <string>_.get('ipfs_hash', {plain: true}));
+        try {
+
+            const props = await ProposalOrm.findAll({
+                offset: offset,
+                limit: limit,
+                where: whereClause,
+                order: [['createdAt', 'DESC']],
+                attributes: ['ipfs_hash'],
+            });
+            return props.map(_ => <string>_.get('ipfs_hash', {plain: true}));
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
     }
 
     private toProposal() {

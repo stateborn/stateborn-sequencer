@@ -7,6 +7,11 @@ import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
 import { LOGGER } from '../infrastructure/pino-logger-service';
 import { IDbUserRepository } from '../domain/repository/i-db-user-repository';
 import { isExpired } from './date-service';
+import { TokenDataService } from './dao/token-data-service';
+import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
+import { Dao } from '../domain/model/dao/dao';
+import { WrongVotingPowerError } from './error/wrong-voting-power-error';
+import { getBooleanProperty } from './env-var/env-var-service';
 
 export class CreateVoteService {
     private readonly ipfsRepository: IIpfsRepository;
@@ -15,8 +20,10 @@ export class CreateVoteService {
     private readonly mapperService: IMapperService;
     private readonly signatureService: SignatureService;
     private readonly dbProposalRepository: IDbProposalRepository;
+    private readonly tokenDataService: TokenDataService;
+    private readonly dbDaoRepository: IDbDaoRepository;
 
-    constructor({ipfsRepository, dbVoteRepository, mapperService, signatureService, dbUserRepository, dbProposalRepository}:
+    constructor({ipfsRepository, dbVoteRepository, mapperService, signatureService, dbUserRepository, dbProposalRepository, tokenDataService, dbDaoRepository}:
                     {
                         ipfsRepository: IIpfsRepository,
                         dbVoteRepository: IDbVoteRepository,
@@ -24,6 +31,8 @@ export class CreateVoteService {
                         signatureService: SignatureService,
                         dbUserRepository: IDbUserRepository,
                         dbProposalRepository: IDbProposalRepository,
+                        tokenDataService: TokenDataService,
+                        dbDaoRepository: IDbDaoRepository,
                     }) {
         this.ipfsRepository = ipfsRepository;
         this.dbVoteRepository = dbVoteRepository;
@@ -31,6 +40,8 @@ export class CreateVoteService {
         this.signatureService = signatureService;
         this.dbUserRepository = dbUserRepository;
         this.dbProposalRepository = dbProposalRepository;
+        this.tokenDataService = tokenDataService;
+        this.dbDaoRepository = dbDaoRepository;
     }
 
     async createVote(createVoteDto: CreateVoteDto): Promise<string> {
@@ -39,22 +50,39 @@ export class CreateVoteService {
             const proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(createVoteDto.clientVote.proposalIpfsHash);
             if (proposalWithReport !== undefined) {
                 if (!isExpired(proposalWithReport.proposal.ipfsProposal.clientProposal.endDateUtc)) {
-                    const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
-                    await this.dbUserRepository.findOrCreateUser(createVoteDto.clientVote.voterAddress);
-                    const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
-                    LOGGER.info(`Vote of ${createVoteDto.clientVote.voterAddress} saved to IPFS: ${ipfsHash})`);
-                    await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.ipfsHash);
-                    LOGGER.info(`Proposal vote saved ${ipfsHash} to db`);
-                    return ipfsHash;
+                    // dao will always exist
+                    const dao: Dao | undefined = await this.dbDaoRepository.findDao(proposalWithReport.proposal.ipfsProposal.clientProposal.daoIpfsHash);
+                    const userTokenBalanceAtProposalBlock = await this.tokenDataService.getBalanceOfAddressAtBlock(
+                        dao!.ipfsDao.clientDao.token.address,
+                        Number(dao!.ipfsDao.clientDao.token.decimals),
+                        createVoteDto.clientVote.voterAddress,
+                        // read account balance at address
+                        Number(proposalWithReport.proposal.ipfsProposal.clientProposal.blockNumber),
+                        dao!.ipfsDao.clientDao.token.chainId);
+                    if ((userTokenBalanceAtProposalBlock === createVoteDto.clientVote.votingPower)) {
+                        const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
+                        await this.dbUserRepository.findOrCreateUser(createVoteDto.clientVote.voterAddress);
+                        const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
+                        LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: vote of ${createVoteDto.clientVote.voterAddress} saved to IPFS: ${ipfsHash})`);
+                        await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.ipfsHash);
+                        LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: vote saved ${ipfsHash} to db`);
+                        return ipfsHash;
+                    } else {
+                        if (Number(userTokenBalanceAtProposalBlock) > 0) {
+                            LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: client given voting power is ${createVoteDto.clientVote.votingPower} but read at proposal block ${proposalWithReport.proposal.ipfsProposal.clientProposal.blockNumber} is ${userTokenBalanceAtProposalBlock}. Returning this value to client.`);
+                            throw new WrongVotingPowerError(userTokenBalanceAtProposalBlock,  proposalWithReport.proposal.ipfsProposal.clientProposal.blockNumber);
+                        } else {
+                            throw new Error(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: creating vote failed. Client received voting power at proposal block ${proposalWithReport.proposal.ipfsProposal.clientProposal.blockNumber} is ${createVoteDto.clientVote.votingPower} but read voting power is 0`);
+                        }
+                    }
                 } else {
-                    throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.clientVote.proposalIpfsHash} is ended!`);
+                    throw new Error(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: creating vote failed. Proposal with ipfsHash ${createVoteDto.clientVote.proposalIpfsHash} is ended!`);
                 }
             } else {
-                throw new Error(`Creating vote failed. Proposal with ipfsHash ${createVoteDto.clientVote.proposalIpfsHash} is not found!`);
+                throw new Error(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: creating vote failed. Proposal with ipfsHash ${createVoteDto.clientVote.proposalIpfsHash} is not found!`);
             }
         } else {
-            throw new Error(`Creating vote failed. Vote client signature is not valid.`);
+            throw new Error(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: creating vote failed. Vote client signature is not valid.`);
         }
-
     }
 }

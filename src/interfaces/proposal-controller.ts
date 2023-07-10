@@ -11,6 +11,7 @@ import { GetProposalService } from '../application/get-proposal-service';
 import { Response } from 'express-serve-static-core';
 import { ProposalReportDto } from './dto/report/proposal-report-dto';
 import { ProposalDto } from './dto/proposal-dto';
+import { WrongVotingPowerError } from '../application/error/wrong-voting-power-error';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -67,7 +68,19 @@ export class ProposalController {
             @Body({ required: true }) createVoteDto: CreateVoteDto,
             @Param('ipfsHash') ipfsHash: string,) {
         const createVoteService = <CreateVoteService>DI_CONTAINER.resolve('createVoteService');
-        return await createVoteService.createVote(createVoteDto);
+        try {
+            return await createVoteService.createVote(createVoteDto);
+        } catch (error) {
+            if (error instanceof WrongVotingPowerError) {
+                return res.status(400).send({
+                    errorCode: '1',
+                    readVotingPower: error.readVotingPower,
+                    proposalBlock: error.proposalBlock,
+                });
+            } else {
+                throw error;
+            }
+        }
     }
 
     @Get('/:ipfsHash/votes')

@@ -2,6 +2,7 @@ import { ethers, InterfaceAbi } from 'ethers';
 import { DaoToken } from '../../domain/model/dao/dao-token';
 import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
+import { getBooleanProperty, getProperty } from '../env-var/env-var-service';
 
 const {Alchemy, Network, Utils} = require("alchemy-sdk");
 
@@ -25,6 +26,7 @@ export class TokenDataService {
         'function name() view returns (string)',
         'function symbol() view returns (string)',
         'function tokenURI(uint256 tokenId) view returns (string)',
+        'function balanceOf(address) view returns (uint)',
         // OPTIONAL mostly likely not implemented
         'function decimals() public view returns (uint8)',
     ];
@@ -37,10 +39,14 @@ export class TokenDataService {
     }
 
     async getBalanceOfAddressAtBlock(tokenAddress: string, tokenDecimals: number, userAddress: string, block: number, chainId: string): Promise<string> {
-        const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
-        // @ts-ignore
-        const res = await contract.balanceOf(userAddress, {blockTag: block});
-        return ethers.formatUnits(res, tokenDecimals);
+        if (getBooleanProperty('DEVELOPMENT_FAKE_TOKENS_MODE')) {
+            return getProperty('DEVELOPMENT_FAKE_TOKENS_AMOUNT');
+        } else {
+            const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
+            // @ts-ignore
+            const res = await contract.balanceOf(userAddress, {blockTag: block});
+            return ethers.formatUnits(res, tokenDecimals);
+        }
     }
 
     async getBlockNumber(chainId: string): Promise<number> {

@@ -1,5 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumberString, IsString } from 'class-validator';
 
 export class ClientVote {
 
@@ -19,7 +19,7 @@ export class ClientVote {
     public readonly vote: string;
 
     @AutoMap()
-    @IsString()
+    @IsNumberString()
     @IsNotEmpty()
     public readonly votingPower: string;
 
