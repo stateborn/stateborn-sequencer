@@ -24,7 +24,7 @@ export const getNumberProperty = (propertyName: string): number => {
 };
 
 export const getBooleanProperty = (propertyName: string): boolean => {
-    return JSON.parse(process.env[`${propertyName}`]!);
+    return getProperty(propertyName) === 'true';
 };
 
 export const getArrayProperty = (propertyName: string): string[] => {

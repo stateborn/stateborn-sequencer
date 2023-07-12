@@ -39,14 +39,10 @@ export class TokenDataService {
     }
 
     async getBalanceOfAddressAtBlock(tokenAddress: string, tokenDecimals: number, userAddress: string, block: number, chainId: string): Promise<string> {
-        if (getBooleanProperty('DEVELOPMENT_FAKE_TOKENS_MODE')) {
-            return getProperty('DEVELOPMENT_FAKE_TOKENS_AMOUNT');
-        } else {
-            const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
-            // @ts-ignore
-            const res = await contract.balanceOf(userAddress, {blockTag: block});
-            return ethers.formatUnits(res, tokenDecimals);
-        }
+        const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
+        // @ts-ignore
+        const res = await contract.balanceOf(userAddress, {blockTag: block});
+        return ethers.formatUnits(res, tokenDecimals);
     }
 
     async getBlockNumber(chainId: string): Promise<number> {

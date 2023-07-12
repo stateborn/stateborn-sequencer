@@ -11,7 +11,6 @@ import { TokenDataService } from './dao/token-data-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
 import { WrongVotingPowerError } from './error/wrong-voting-power-error';
-import { getBooleanProperty } from './env-var/env-var-service';
 
 export class CreateVoteService {
     private readonly ipfsRepository: IIpfsRepository;

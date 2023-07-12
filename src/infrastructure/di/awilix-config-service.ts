@@ -16,6 +16,7 @@ import { TokenDataService } from '../../application/dao/token-data-service';
 import { ArbitrumNetworkProvider } from '../arbitrum-network-provider';
 import { NetworkProviderService } from '../network-provider-service';
 import { PolygonNetworkProvider } from '../polygon-network-provider';
+import { LocalhostNetworkProvider } from '../localhost-network-provider';
 
 export const DI_CONTAINER = createContainer({
     injectionMode: InjectionMode.PROXY
@@ -79,6 +80,9 @@ export const initializeAwilixDI = () => {
             lifetime: Lifetime.SINGLETON,
         }),
         arbitrumNetworkProvider: asClass(ArbitrumNetworkProvider, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        localhostNetworkProvider: asClass(LocalhostNetworkProvider, {
             lifetime: Lifetime.SINGLETON,
         }),
         networkProviderService: asClass(NetworkProviderService, {

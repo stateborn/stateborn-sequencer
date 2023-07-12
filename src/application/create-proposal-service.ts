@@ -10,7 +10,6 @@ import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
 import { isDateCreatedInLast5minutes, isDateInTheFuture, isUtcDateAEqualOrAfterB } from './date-service';
 import { ProposalType } from '../domain/model/proposal/proposal-type';
-import { getBooleanProperty } from './env-var/env-var-service';
 
 export class CreateProposalService {
 
