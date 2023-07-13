@@ -51,18 +51,20 @@ export class SignatureService {
             proposalIpfsHash,
             vote.ipfsVote.clientVote.vote,
             vote.ipfsVote.clientVote.votingPower,
+            vote.ipfsVote.clientVote.voteDate,
         )));
     }
 
     private abiEncodeVote(clientVote: ClientVote): string {
         // Same as `abi.encodePacked` in Solidity
         return ethers.solidityPacked(
-            ["address", "bytes", "bytes32", "uint256"],
+            ["address", "bytes", "bytes32", "uint256", "bytes32"],
             [
                 clientVote.voterAddress,
                 ethers.toUtf8Bytes(clientVote.proposalIpfsHash),
                 encodeBytes32String(clientVote.vote),
                 Number(clientVote.votingPower),
+                encodeBytes32String(clientVote.voteDate),
             ]
         );
     }

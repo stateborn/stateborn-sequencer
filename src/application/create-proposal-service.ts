@@ -8,7 +8,7 @@ import { LOGGER } from '../infrastructure/pino-logger-service';
 import { TokenDataService } from './dao/token-data-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
-import { isDateCreatedInLast5minutes, isDateInTheFuture, isUtcDateAEqualOrAfterB } from './date-service';
+import { isDateCreatedInLastGivenMinutes, isDateInTheFuture, isUtcDateAEqualOrAfterB } from './date-service';
 import { ProposalType } from '../domain/model/proposal/proposal-type';
 
 export class CreateProposalService {
@@ -114,7 +114,7 @@ export class CreateProposalService {
     }
 
     private areProposalDatesCorrect(proposal: CreateProposalDto): boolean {
-        const proposalStartDateCorrect = isDateCreatedInLast5minutes(proposal.clientProposal.startDateUtc);
+        const proposalStartDateCorrect = isDateCreatedInLastGivenMinutes(proposal.clientProposal.startDateUtc, 5);
         const proposalEndDateInFuture = isDateInTheFuture(proposal.clientProposal.endDateUtc);
         const areDatesCorrect = isUtcDateAEqualOrAfterB(proposal.clientProposal.endDateUtc, proposal.clientProposal.startDateUtc);
         return proposalStartDateCorrect && proposalEndDateInFuture && areDatesCorrect;

@@ -123,6 +123,7 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             proposal_ipfs_hash: proposalIpfsHash,
             vote: ipfsVote.clientVote.vote,
             voting_power: Number(ipfsVote.clientVote.votingPower),
+            vote_date: ipfsVote.clientVote.voteDate,
         });
         await props.save();
     }
@@ -300,7 +301,8 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                         <string>p.get('user_address', {plain: true}),
                         <string>p.get('proposal.ipfs_hash', {plain: true}),
                         <YesNoVote>p.get('vote', {plain: true}),
-                        (<Number>p.get('voting_power', {plain: true})).toString()),
+                        (<Number>p.get('voting_power', {plain: true})).toString(),
+                        (<Date>p.get('vote_date', {plain: true})).toISOString()),
                     <string>p.get('sequencer_signature', {plain: true})),
                 <string>p.get('id', {plain: true}),
                 <string>p.get('ipfs_hash', {plain: true}),

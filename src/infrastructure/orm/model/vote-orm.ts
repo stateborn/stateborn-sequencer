@@ -21,6 +21,10 @@ const VoteOrm = SEQUELIZE.define('vote', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
+    vote_date: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
 }, {
     indexes: [
         {

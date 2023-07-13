@@ -19,13 +19,13 @@ export const isUtcDateAEqualOrAfterB = (dateAUtc: string, dateBUtc: string): boo
 }
 
 
-export const isDateCreatedInLast5minutes = (utcDate: string): boolean => {
+export const isDateCreatedInLastGivenMinutes = (utcDate: string, minutes: number): boolean => {
   // @ts-ignore
   const a = dayjs.utc(utcDate).isSame(dayjs.utc());
   // @ts-ignore
   const b = dayjs.utc(utcDate).isBefore(dayjs.utc());
   // @ts-ignore
-  const c = dayjs.utc(utcDate).isAfter(dayjs.utc().subtract(5, 'minute'));
+  const c = dayjs.utc(utcDate).isAfter(dayjs.utc().subtract(minutes, 'minute'));
   return ( a || b) && c;
 }
 export const isDateInTheFuture = (utcDate: string): boolean => {

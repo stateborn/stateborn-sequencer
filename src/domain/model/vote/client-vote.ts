@@ -1,5 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { IsNotEmpty, IsNumberString, IsString } from 'class-validator';
+import { IsISO8601, IsNotEmpty, IsNumberString, IsString } from 'class-validator';
 
 export class ClientVote {
 
@@ -23,10 +23,16 @@ export class ClientVote {
     @IsNotEmpty()
     public readonly votingPower: string;
 
-    constructor(voterAddress: string, proposalIpfsHash: string, vote: string, votingPower: string) {
+    @AutoMap()
+    @IsISO8601()
+    @IsNotEmpty()
+    public voteDate: string;
+
+    constructor(voterAddress: string, proposalIpfsHash: string, vote: string, votingPower: string, voteDate: string) {
         this.voterAddress = voterAddress;
         this.proposalIpfsHash = proposalIpfsHash;
         this.vote = vote;
         this.votingPower = votingPower;
+        this.voteDate = voteDate;
     }
 }

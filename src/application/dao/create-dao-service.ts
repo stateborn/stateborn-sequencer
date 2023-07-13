@@ -8,7 +8,7 @@ import { IIpfsRepository } from '../../domain/repository/i-ipfs-repository';
 import { LOGGER } from '../../infrastructure/pino-logger-service';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
 import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
-import { isDateCreatedInLast5minutes } from '../date-service';
+import { isDateCreatedInLastGivenMinutes } from '../date-service';
 import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 
 export class CreateDaoService {
@@ -85,7 +85,7 @@ export class CreateDaoService {
         const ownersLengthCorrect = createDaoDto.clientDao.owners.length === 1
         const ownerAddressCorrect = createDaoDto.clientDao.owners[0] === createDaoDto.creatorAddress;
         const proposalTokenRequiredQuantityCorrect = Number.isInteger(Number(createDaoDto.clientDao.proposalTokenRequiredQuantity));
-        const creationDateIsCorrect = isDateCreatedInLast5minutes(createDaoDto.clientDao.creationDateUtc);
+        const creationDateIsCorrect = isDateCreatedInLastGivenMinutes(createDaoDto.clientDao.creationDateUtc, 5);
         if (!thresholdIsCorrect) {
             throw new Error(`Creating dao failed. Owners multisig threshold ${createDaoDto.clientDao.ownersMultisigThreshold} is not supported.`);
         }

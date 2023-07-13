@@ -6,11 +6,12 @@ import { CreateVoteDto } from '../interfaces/dto/create-vote-dto';
 import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
 import { LOGGER } from '../infrastructure/pino-logger-service';
 import { IDbUserRepository } from '../domain/repository/i-db-user-repository';
-import { isExpired } from './date-service';
+import { isDateCreatedInLastGivenMinutes, isDateInTheFuture, isExpired, isUtcDateAEqualOrAfterB } from './date-service';
 import { TokenDataService } from './dao/token-data-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
 import { WrongVotingPowerError } from './error/wrong-voting-power-error';
+import { CreateProposalDto } from '../interfaces/dto/create-proposal-dto';
 
 export class CreateVoteService {
     private readonly ipfsRepository: IIpfsRepository;
@@ -59,13 +60,17 @@ export class CreateVoteService {
                         Number(proposalWithReport.proposal.ipfsProposal.clientProposal.blockNumber),
                         dao!.ipfsDao.clientDao.token.chainId);
                     if ((userTokenBalanceAtProposalBlock === createVoteDto.clientVote.votingPower)) {
-                        const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
-                        await this.dbUserRepository.findOrCreateUser(createVoteDto.clientVote.voterAddress);
-                        const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
-                        LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: vote of ${createVoteDto.clientVote.voterAddress} saved to IPFS: ${ipfsHash})`);
-                        await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.ipfsHash);
-                        LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: vote saved ${ipfsHash} to db`);
-                        return ipfsHash;
+                        if (isDateCreatedInLastGivenMinutes(createVoteDto.clientVote.voteDate, 2)) {
+                            const ipfsVote = this.mapperService.toIpfsVote(createVoteDto);
+                            await this.dbUserRepository.findOrCreateUser(createVoteDto.clientVote.voterAddress);
+                            const ipfsHash = await this.ipfsRepository.saveVote(ipfsVote);
+                            LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: vote of ${createVoteDto.clientVote.voterAddress} saved to IPFS: ${ipfsHash})`);
+                            await this.dbVoteRepository.saveVote(ipfsVote, ipfsHash, proposalWithReport.proposal.ipfsHash);
+                            LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: vote saved ${ipfsHash} to db`);
+                            return ipfsHash;
+                        } else {
+                            throw new Error(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: creating vote failed. Vote date ${createVoteDto.clientVote.voteDate} is not in last 2 minutes!`);
+                        }
                     } else {
                         if (Number(userTokenBalanceAtProposalBlock) > 0) {
                             LOGGER.info(`Proposal ${createVoteDto.clientVote.proposalIpfsHash}: client given voting power is ${createVoteDto.clientVote.votingPower} but read at proposal block ${proposalWithReport.proposal.ipfsProposal.clientProposal.blockNumber} is ${userTokenBalanceAtProposalBlock}. Returning this value to client.`);
