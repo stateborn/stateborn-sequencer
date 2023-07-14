@@ -299,7 +299,7 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
                 new IpfsVote(
                     new ClientVote(
                         <string>p.get('user_address', {plain: true}),
-                        <string>p.get('proposal.ipfs_hash', {plain: true}),
+                        <string>p.get('proposal_ipfs_hash', {plain: true}),
                         <YesNoVote>p.get('vote', {plain: true}),
                         (<Number>p.get('voting_power', {plain: true})).toString(),
                         (<Date>p.get('vote_date', {plain: true})).toISOString()),

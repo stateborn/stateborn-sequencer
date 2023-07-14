@@ -6,7 +6,6 @@ import { CreateDaoService } from '../application/dao/create-dao-service';
 import { IMapperService } from '../domain/service/i-mapper-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
-import { map } from '@automapper/core/lib/mappings/map';
 import { ProposalHeaderDto } from './dto/proposal/proposal-header-dto';
 
 @JsonController('/api/rest/v1/dao')
