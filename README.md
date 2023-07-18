@@ -5,6 +5,7 @@ It is responsible for processing stateborn data such as daos, proposals and vote
 ![stateborn architecture](stateborn-backend.svg)
 ## Installation
 This is localhost setup guide based on `Docker` and `docker-compose`. The configuration is located in `docker-compose-local.yaml`.
+For production setup, please refer to `docker-compose.yaml` file and `Dockerfile`.
 ### Preequisites
 Currently stateborn supports 3 blockchain networks: `Ethereum Mainnet`, `Polygon Mainnet` and `Arbitrum One`.
 Archive node providers API keys are required for the proper functioning of the sequencer.
