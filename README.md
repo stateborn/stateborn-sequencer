@@ -8,7 +8,7 @@ This is localhost setup guide based on `Docker` and `docker-compose`. The config
 For production setup, please refer to `docker-compose.yaml` file and `Dockerfile`.
 ### Preequisites
 Currently stateborn supports 3 blockchain networks: `Ethereum Mainnet`, `Polygon Mainnet` and `Arbitrum One`.
-Archive node providers API keys are required for the proper functioning of the sequencer.
+Archive node providers RPC urls are required for the proper functioning of the sequencer.
 Setup archive node RPC urls in `docker-compose.yaml` file:
 - `ETHEREUM_NODE_RPC_URL` for Ethereum
 - `POLYGON_NODE_RPC_URL` for Polygon
