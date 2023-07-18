@@ -2,7 +2,7 @@
 stateborn-sequencer is a backend service component of the stateborn project. 
 It is responsible for processing stateborn data such as daos, proposals and votes and storing it in a database and IPFS.
 ## Architecutre
-![Alternative Text](stateborn-backend.svg)
+![stateborn architecture](stateborn.svg)
 ## Installation
 This is localhost setup guide based on `Docker` and `docker-compose`. The startup configuration is located in `docker-compose-local.yaml`.
 ### Preequisites
