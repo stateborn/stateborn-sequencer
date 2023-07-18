@@ -2,9 +2,9 @@
 stateborn-sequencer is a backend service component of the stateborn project. 
 It is responsible for processing stateborn data such as daos, proposals and votes and storing it in a database and IPFS.
 ## Architecutre
-![stateborn architecture](stateborn.svg)
+![stateborn architecture](stateborn-backend.svg)
 ## Installation
-This is localhost setup guide based on `Docker` and `docker-compose`. The startup configuration is located in `docker-compose-local.yaml`.
+This is localhost setup guide based on `Docker` and `docker-compose`. The configuration is located in `docker-compose-local.yaml`.
 ### Preequisites
 Currently stateborn supports 3 blockchain networks: `Ethereum Mainnet`, `Polygon Mainnet` and `Arbitrum One`.
 Archive node providers API keys are required for the proper functioning of the sequencer.
