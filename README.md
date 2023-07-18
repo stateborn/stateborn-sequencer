@@ -1,5 +1,5 @@
 # stateborn-sequencer
-stateborn-sequencer is a backend service component of the stateborn project. 
+stateborn-sequencer is a backend service for [stateborn.org](https://stateborn.org). 
 It is responsible for processing stateborn data such as daos, proposals and votes and storing it in a database and IPFS.
 ## Architecutre
 ![stateborn architecture](stateborn-backend.svg)
