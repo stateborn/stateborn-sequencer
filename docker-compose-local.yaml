@@ -1,22 +1,63 @@
-version: '2'
+version: '3'
 
 services:
 
-  postgres:
+  stateborn-sequencer:
+    image: stateborn-sequencer
+    container_name: stateborn-sequencer
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=stateborn-postgres
+      - DB_NAME=sequencer
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      #TODO
+      - ETHEREUM_NODE_RPC_URL=<TODO>
+      #TODO
+      - POLYGON_NODE_RPC_URL=<TODO>
+      #TODO
+      - ARBITRUM_NODE_RPC_URL=<TODO>
+      - IPFS_HOST=stateborn-ipfs
+      - IPFS_PORT=5001
+      - IS_DEVELOPMENT_MODE=false
+      - DEVELOPMENT_NETWORK_RPC=http://127.0.0.1:8545/
+      - DEVELOPMENT_NETWORK_CHAIN_ID=31337
+      - DEVELOPMENT_NETWORK_NAME=Hardhat localhost
+    ports:
+      - 8000:8000
+    volumes:
+      - ./volumes/postgres-data:/var/lib/postgresql/data
+
+  stateborn-ipfs:
+    image: ipfs/kubo:latest
+    container_name: stateborn-ipfs
+    restart: always
+    volumes:
+      - ./volumes/ipfs/ipfs-staging:/export
+      - ./volumes/ipfs/ipfs-data:/data/ipfs
+    expose:
+      - 5001
+      - 4001
+      - 8080
+
+  stateborn-postgres:
     image: postgres:15-alpine
-    container_name: postgres
+    container_name: stateborn-postgres
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: sequencer
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
-      - 5435:5432
+      - 5432
     volumes:
       - ./volumes/postgres-data:/var/lib/postgresql/data
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 9000:8080

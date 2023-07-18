@@ -5,7 +5,7 @@ import { getProperty } from '../application/env-var/env-var-service';
 
 export class ArbitrumNetworkProvider implements IEthProvider {
 
-    private provider = new ethers.JsonRpcProvider(getProperty('QUICKNODE_RPC_URL'), Network.from(Number(NetworkProviderService.ARBITRUM_CHAIN_ID)));
+    private provider = new ethers.JsonRpcProvider(getProperty('ARBITRUM_NODE_RPC_URL'), Network.from(Number(NetworkProviderService.ARBITRUM_CHAIN_ID)));
 
     getProvider(): ethers.JsonRpcProvider {
         return this.provider;
