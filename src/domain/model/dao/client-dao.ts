@@ -37,20 +37,18 @@ export class ClientDao {
     owners: string[];
 
     @AutoMap()
-    @IsString()
-    @IsDefined()
+    @IsNotEmpty()
     @IsNumberString()
     ownersMultisigThreshold: string;
 
     @AutoMap()
-    @IsString()
-    @IsDefined()
+    @IsNotEmpty()
     @IsNumberString()
     proposalTokenRequiredQuantity: string;
 
     @AutoMap()
     @IsString()
-    @IsDefined()
+    @IsNotEmpty()
     @IsISO8601()
     creationDateUtc: string;
 

@@ -17,23 +17,6 @@ import { WrongVotingPowerError } from '../application/error/wrong-voting-power-e
 export class ProposalController {
 
     @Post('/')
-    // @ResponseSchema(RegisterCompanyResultDto)
-    // @ResponseSchema(ErrorDto, { statusCode: 400 })
-    // @OpenAPI({
-    //     description: 'Find companies suggestions.',
-    //     responses: {
-    //         400: { description: `Company register failed. Error codes:
-    //            <ul>
-    //               <li>COMPANY_ALREADY_REGISTERED = CompanyRegistrationError_0</li>
-    //               <li>ADMIN_NOT_PROVIDED = CompanyRegistrationError_1</li>
-    //               <li>ADMIN_EMAIL_ALREADY_USED = CompanyRegistrationError_2</li>
-    //               <li>EMPLOYEE_EMAIL_ALREADY_USED = CompanyRegistrationError_3</li>
-    //               <li>UNEXPECTED_DATABASE_ERROR = CompanyRegistrationError_4</li>
-    //               <li>USERS_TO_REGISTER_NOT_ACCEPTED_TERMS_AND_CONDITIONS = CompanyRegistrationError_5</li>
-    //            </ul>
-    //         ` },
-    //     },
-    // })
     async createProposal(
             @Res() res: Response,
             @Req() req: Request,
@@ -54,9 +37,9 @@ export class ProposalController {
 
     @Get('/:ipfsHash/report')
     async getProposalReport(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Param('ipfsHash') ipfsHash: string): Promise<ProposalReportDto | undefined> {
+            @Res() res: Response,
+            @Req() req: Request,
+            @Param('ipfsHash') ipfsHash: string): Promise<ProposalReportDto | undefined> {
         const getProposalService = <GetProposalService>DI_CONTAINER.resolve('getProposalService');
         return getProposalService.getProposalReport(ipfsHash);
     }
@@ -85,11 +68,11 @@ export class ProposalController {
 
     @Get('/:ipfsHash/votes')
     async getVotes(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Param('ipfsHash') ipfsHash: string,
-        @QueryParam('offset') offset: number,
-        @QueryParam('limit') limit: number) {
+            @Res() res: Response,
+            @Req() req: Request,
+            @Param('ipfsHash') ipfsHash: string,
+            @QueryParam('offset') offset: number,
+            @QueryParam('limit') limit: number) {
         const dbVoteRepository = <IDbVoteRepository>DI_CONTAINER.resolve('dbVoteRepository');
         const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
         const votes = await dbVoteRepository.findVotes(ipfsHash, offset, limit);
@@ -98,9 +81,9 @@ export class ProposalController {
 
     @Get('/:ipfsHash/votes/all/count')
     async countVotes(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Param('ipfsHash') ipfsHash: string) {
+            @Res() res: Response,
+            @Req() req: Request,
+            @Param('ipfsHash') ipfsHash: string) {
         const dbVoteRepository = <IDbVoteRepository>DI_CONTAINER.resolve('dbVoteRepository');
         const proposalCount = await dbVoteRepository.countVotes(ipfsHash);
         return { count: proposalCount.toFixed(0) };
@@ -108,9 +91,9 @@ export class ProposalController {
 
     @Get('/:ipfsHash/votes/all/count/distinct')
     async countDistinctVotes(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Param('ipfsHash') ipfsHash: string) {
+            @Res() res: Response,
+            @Req() req: Request,
+            @Param('ipfsHash') ipfsHash: string) {
         const dbVoteRepository = <IDbVoteRepository>DI_CONTAINER.resolve('dbVoteRepository');
         const proposalCount = await dbVoteRepository.countDistinctVotes(ipfsHash);
         return { count: proposalCount };
@@ -130,9 +113,9 @@ export class ProposalController {
 
     @Get('/:ipfsHash/result')
     async getProposalResult(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Param('ipfsHash') ipfsHash: string) {
+            @Res() res: Response,
+            @Req() req: Request,
+            @Param('ipfsHash') ipfsHash: string) {
         const proposalResultService = <ProposalResultService>DI_CONTAINER.resolve('proposalResultService');
         return proposalResultService.calculateProposalResults(ipfsHash);
     }

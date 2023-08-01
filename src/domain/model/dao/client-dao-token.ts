@@ -1,5 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { IsEnum, IsNumberString, IsOptional, IsString, isValidationOptions } from 'class-validator';
+import { IsEnum, IsNumberString, IsString } from 'class-validator';
 import { DaoTokenType } from '../../../domain/model/dao/dao-token-type';
 
 export class ClientDaoToken {
@@ -21,7 +21,7 @@ export class ClientDaoToken {
     type: DaoTokenType;
 
     @AutoMap()
-    @IsString()
+    @IsNumberString()
     chainId: string;
 
     @AutoMap()

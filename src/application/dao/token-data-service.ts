@@ -2,9 +2,6 @@ import { ethers, InterfaceAbi } from 'ethers';
 import { DaoToken } from '../../domain/model/dao/dao-token';
 import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
-import { getBooleanProperty, getProperty } from '../env-var/env-var-service';
-
-const {Alchemy, Network, Utils} = require("alchemy-sdk");
 
 export class TokenDataService {
 
@@ -87,6 +84,4 @@ export class TokenDataService {
             throw new Error(`Error reading token ${tokenAddress} data`);
         }
     }
-
-
 }

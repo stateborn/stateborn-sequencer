@@ -1,7 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { SEQUELIZE } from '../sequelize-connection-service';
 import { ProposalTypeOrm } from './proposal-type-orm';
-import { SequencerOrm } from './sequencer-orm';
 import { ProposalReportOrm } from './proposal-report-orm';
 import { DaoOrm } from './dao/dao-orm';
 
@@ -17,6 +16,10 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
     },
     description: {
         type: DataTypes.TEXT,
+        allowNull: false
+    },
+    creator_address: {
+        type: DataTypes.STRING,
         allowNull: false
     },
     creator_signature: {
@@ -49,7 +52,6 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
 });
 ProposalOrm.belongsTo(DaoOrm, {foreignKey: {name: 'dao_ipfs_hash', allowNull: false}});
 ProposalOrm.belongsTo(ProposalTypeOrm, {foreignKey: {name: 'proposal_type_type', allowNull: false}});
-ProposalOrm.belongsTo(SequencerOrm, {foreignKey: {name: 'creator_address', allowNull: false}});
 ProposalOrm.hasOne(ProposalReportOrm, {foreignKey: {name: 'proposal_ipfs_hash', allowNull: false}});
 export {
     ProposalOrm,

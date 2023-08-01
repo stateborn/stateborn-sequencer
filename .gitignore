@@ -42,3 +42,4 @@ DEADJOE
 .run/
 volumes/
 build_docker.sh
+logs/

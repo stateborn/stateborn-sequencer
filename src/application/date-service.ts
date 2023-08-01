@@ -18,7 +18,6 @@ export const isUtcDateAEqualOrAfterB = (dateAUtc: string, dateBUtc: string): boo
   return (dateAUtc === dateBUtc) || dayjs.utc(dateAUtc).isAfter(dayjs.utc(dateBUtc));
 }
 
-
 export const isDateCreatedInLastGivenMinutes = (utcDate: string, minutes: number): boolean => {
   // @ts-ignore
   const a = dayjs.utc(utcDate).isSame(dayjs.utc());

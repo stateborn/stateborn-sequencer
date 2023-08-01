@@ -12,23 +12,6 @@ import { ProposalHeaderDto } from './dto/proposal/proposal-header-dto';
 export class DaoController {
 
     @Post('/')
-    // @ResponseSchema(RegisterCompanyResultDto)
-    // @ResponseSchema(ErrorDto, { statusCode: 400 })
-    // @OpenAPI({
-    //     description: 'Find companies suggestions.',
-    //     responses: {
-    //         400: { description: `Company register failed. Error   codes:
-    //            <ul>
-    //               <li>COMPANY_ALREADY_REGISTERED = CompanyRegistrationError_0</li>
-    //               <li>ADMIN_NOT_PROVIDED = CompanyRegistrationError_1</li>
-    //               <li>ADMIN_EMAIL_ALREADY_USED = CompanyRegistrationError_2</li>
-    //               <li>EMPLOYEE_EMAIL_ALREADY_USED = CompanyRegistrationError_3</li>
-    //               <li>UNEXPECTED_DATABASE_ERROR = CompanyRegistrationError_4</li>
-    //               <li>USERS_TO_REGISTER_NOT_ACCEPTED_TERMS_AND_CONDITIONS = CompanyRegistrationError_5</li>
-    //            </ul>
-    //         ` },
-    //     },
-    // })
     async createDao(
         @Res() res: Response,
         @Req() req: Request,
@@ -103,5 +86,4 @@ export class DaoController {
         const proposalCount = await dpProposalRepository.countProposals(daoIpfsHash);
         return { count: proposalCount.toFixed(0) };
     }
-
 }

@@ -1,9 +1,6 @@
 import { IDbProposalRepository } from '../../domain/repository/i-db-proposal-repository';
 import { ProposalOrm } from './model/proposal-orm';
-import { IDbSequencerRepository } from '../../domain/repository/i-db-sequencer-repository';
-import { Sequencer } from '../../domain/model/sequencer';
-import { SequencerOrm } from './model/sequencer-orm';
-import { col, fn, Model, Op, QueryTypes, where } from 'sequelize';
+import { col, fn, Model, Op, QueryTypes } from 'sequelize';
 import { Proposal } from '../../domain/model/proposal/proposal';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { ClientProposal } from '../../domain/model/proposal/client-proposal';
@@ -33,7 +30,7 @@ import { DaoHeader } from '../../domain/model/dao/dao-header';
 import { ClientDao } from '../../domain/model/dao/client-dao';
 import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
 
-export class DbRepository implements IDbProposalRepository, IDbSequencerRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
+export class DbRepository implements IDbProposalRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
 
     async findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<DaoHeader[]> {
         const searchParams: any = {
@@ -187,16 +184,6 @@ export class DbRepository implements IDbProposalRepository, IDbSequencerReposito
             return new ProposalWithReport(proposal, proposalReport);
         }
         return undefined;
-    }
-
-    async findOrCreateSequencer(address: string): Promise<Sequencer> {
-        const [sequencer, created] = await SequencerOrm.findOrCreate({
-            where: {address: address},
-            defaults: {
-                address: address
-            }
-        });
-        return new Sequencer(<string>sequencer.get('address', {plain: true}));
     }
 
     public async saveProposal(ipfsProposal: IpfsProposal, ipfsHash: string): Promise<void> {

@@ -1,12 +1,12 @@
-import envVarsList from './env-vars-list';
+import ENV_VARS_LIST from './default-env-vars';
 export const getProperty = (propertyName: string): string => {
     const value: string =  <string>process.env[`${propertyName}`];
     if (value !== undefined) {
         return value;
     } else {
-        const defaultValue =  Object(envVarsList)[propertyName];
+        const defaultValue =  Object(ENV_VARS_LIST)[propertyName];
         if (defaultValue) {
-            console.warn(`ENV VAR ${propertyName} not set, returning default value ${propertyName}=${Object(envVarsList)[propertyName]}`)
+            console.warn(`ENV VAR ${propertyName} not set, returning default value ${propertyName}=${Object(ENV_VARS_LIST)[propertyName]}`)
             return defaultValue;
         } else {
             throw new Error(`Required ENV VAR ${propertyName} not set! Please set it and restart the application!`);
@@ -14,19 +14,6 @@ export const getProperty = (propertyName: string): string => {
     }
 };
 
-export const getNumberProperty = (propertyName: string): number => {
-    const value: number =  Number(process.env[`${propertyName}`]);
-    if (value !== undefined) {
-        return value;
-    } else {
-        throw new Error(`Fatal: number based env var ${propertyName} not set!`);
-    }
-};
-
 export const getBooleanProperty = (propertyName: string): boolean => {
     return getProperty(propertyName) === 'true';
-};
-
-export const getArrayProperty = (propertyName: string): string[] => {
-    return JSON.parse(<string>process.env[`${propertyName}`]);
 };

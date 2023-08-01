@@ -1,13 +1,11 @@
 import { ProposalTypeOrm } from './model/proposal-type-orm';
 import { ProposalType } from '../../domain/model/proposal/proposal-type';
-import { SequencerOrm } from './model/sequencer-orm';
 import { UserOrm } from './model/user-orm';
 import { ProposalOrm } from './model/proposal-orm';
 import { VoteOrm } from './model/vote-orm';
 import { ProposalReportOrm } from './model/proposal-report-orm';
 import { TokenOrm } from './model/dao/token-orm';
 import { initializeDaoAssociations } from './model/dao/dao-token-orm';
-import { Dao } from '../../domain/model/dao/dao';
 import { DaoOrm } from './model/dao/dao-orm';
 import { SEQUELIZE } from './sequelize-connection-service';
 
@@ -33,7 +31,6 @@ export const syncOrm = async () => {
             .catch((error) => {
                 console.error('Error synchronizing ProposalTypeOrm:', error);
             });
-        await SequencerOrm.sync();
         await UserOrm.sync();
         await ProposalOrm.sync();
         await VoteOrm.sync();

@@ -9,7 +9,6 @@ export class Proposal {
     @AutoMap()
     readonly ipfsHash: string;
 
-
     constructor(ipfsProposal: IpfsProposal, ipfsHash: string) {
         this.ipfsProposal = ipfsProposal;
         this.ipfsHash = ipfsHash;

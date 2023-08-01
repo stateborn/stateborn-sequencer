@@ -3,7 +3,6 @@ import { IMapperService } from '../domain/service/i-mapper-service';
 import { IIpfsRepository } from '../domain/repository/i-ipfs-repository';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
 import { SignatureService } from '../domain/service/signature-service';
-import { IDbSequencerRepository } from '../domain/repository/i-db-sequencer-repository';
 import { LOGGER } from '../infrastructure/pino-logger-service';
 import { TokenDataService } from './dao/token-data-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
@@ -16,7 +15,6 @@ export class CreateProposalService {
     private readonly ipfsRepository: IIpfsRepository;
     private readonly dbProposalRepository: IDbProposalRepository;
     private readonly dbDaoRepository: IDbDaoRepository;
-    private readonly dbSequencerRepository: IDbSequencerRepository;
     private readonly mapperService: IMapperService;
     private readonly signatureService: SignatureService;
     private readonly tokenDataService: TokenDataService;
@@ -26,7 +24,6 @@ export class CreateProposalService {
     constructor({
                     ipfsRepository,
                     dbProposalRepository,
-                    dbSequencerRepository,
                     mapperService,
                     signatureService,
                     tokenDataService,
@@ -35,7 +32,6 @@ export class CreateProposalService {
                     {
                         ipfsRepository: IIpfsRepository,
                         dbProposalRepository: IDbProposalRepository,
-                        dbSequencerRepository: IDbSequencerRepository,
                         mapperService: IMapperService,
                         signatureService: SignatureService,
                         dbDaoRepository: IDbDaoRepository,
@@ -43,7 +39,6 @@ export class CreateProposalService {
                     }) {
         this.ipfsRepository = ipfsRepository;
         this.dbProposalRepository = dbProposalRepository;
-        this.dbSequencerRepository = dbSequencerRepository;
         this.mapperService = mapperService;
         this.signatureService = signatureService;
         this.tokenDataService = tokenDataService;
@@ -76,7 +71,6 @@ export class CreateProposalService {
                             }
                         }
                         const ipfsProposal = this.mapperService.toIpfsProposal(createProposalDto);
-                        await this.dbSequencerRepository.findOrCreateSequencer(createProposalDto.clientProposal.creatorAddress);
                         const ipfsHash = await this.ipfsRepository.saveProposal(ipfsProposal);
                         LOGGER.info(`Proposal saved to IPFS: ${ipfsHash})`);
                         await this.dbProposalRepository.saveProposal(ipfsProposal, ipfsHash);

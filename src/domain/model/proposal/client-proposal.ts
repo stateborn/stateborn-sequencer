@@ -1,7 +1,16 @@
 import { AutoMap } from '@automapper/classes';
 import { ProposalType } from './proposal-type';
 import { IProposalData } from './i-proposal-data';
-import { IsEnum, IsISO8601, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+    IsEnum,
+    IsISO8601,
+    IsNotEmpty,
+    IsNumberString,
+    IsObject,
+    IsOptional,
+    IsString,
+    MaxLength
+} from 'class-validator';
 
 export class ClientProposal {
 
@@ -18,6 +27,7 @@ export class ClientProposal {
     @AutoMap()
     @IsString()
     @IsNotEmpty()
+    @MaxLength(120)
     title: string;
 
     @AutoMap()
@@ -40,8 +50,8 @@ export class ClientProposal {
     endDateUtc: string;
 
     @AutoMap()
-    @IsString()
     @IsNotEmpty()
+    @IsNumberString()
     blockNumber: string;
 
     @AutoMap()

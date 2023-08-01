@@ -6,12 +6,11 @@ import { CreateVoteDto } from '../interfaces/dto/create-vote-dto';
 import { IDbVoteRepository } from '../domain/repository/i-db-vote-repository';
 import { LOGGER } from '../infrastructure/pino-logger-service';
 import { IDbUserRepository } from '../domain/repository/i-db-user-repository';
-import { isDateCreatedInLastGivenMinutes, isDateInTheFuture, isExpired, isUtcDateAEqualOrAfterB } from './date-service';
+import { isDateCreatedInLastGivenMinutes, isExpired } from './date-service';
 import { TokenDataService } from './dao/token-data-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
 import { WrongVotingPowerError } from './error/wrong-voting-power-error';
-import { CreateProposalDto } from '../interfaces/dto/create-proposal-dto';
 
 export class CreateVoteService {
     private readonly ipfsRepository: IIpfsRepository;

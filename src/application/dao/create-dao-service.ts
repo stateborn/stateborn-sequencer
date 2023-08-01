@@ -9,7 +9,6 @@ import { LOGGER } from '../../infrastructure/pino-logger-service';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
 import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
 import { isDateCreatedInLastGivenMinutes } from '../date-service';
-import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
 
 export class CreateDaoService {
 

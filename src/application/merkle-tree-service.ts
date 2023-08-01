@@ -1,7 +1,6 @@
 import { MerkleTree } from 'merkletreejs';
 import { keccak256 } from 'ethers';
 
-
 /** This is stateful service */
 export class MerkleTreeService {
 

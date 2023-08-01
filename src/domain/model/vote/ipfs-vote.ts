@@ -6,7 +6,7 @@ export class IpfsVote {
     @AutoMap(() => ClientVote)
     clientVote: ClientVote;
 
-    @AutoMap(() => ClientVote)
+    @AutoMap()
     userSignature: string;
 
     constructor(clientVote: ClientVote, userSignature: string) {
