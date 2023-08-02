@@ -3,6 +3,7 @@ import { SEQUELIZE } from '../sequelize-connection-service';
 import { ProposalTypeOrm } from './proposal-type-orm';
 import { ProposalReportOrm } from './proposal-report-orm';
 import { DaoOrm } from './dao/dao-orm';
+import { ProposalTransactionOrm } from './proposal-transaction-orm';
 
 const ProposalOrm = SEQUELIZE.define('proposal', {
     ipfs_hash: {
@@ -53,6 +54,7 @@ const ProposalOrm = SEQUELIZE.define('proposal', {
 ProposalOrm.belongsTo(DaoOrm, {foreignKey: {name: 'dao_ipfs_hash', allowNull: false}});
 ProposalOrm.belongsTo(ProposalTypeOrm, {foreignKey: {name: 'proposal_type_type', allowNull: false}});
 ProposalOrm.hasOne(ProposalReportOrm, {foreignKey: {name: 'proposal_ipfs_hash', allowNull: false}});
+ProposalOrm.hasMany(ProposalTransactionOrm, {foreignKey: {name: 'proposal_ipfs_hash', allowNull: false}});
 export {
     ProposalOrm,
 }

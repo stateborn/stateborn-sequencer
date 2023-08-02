@@ -7,7 +7,7 @@ import { TokenDataService } from './token-data-service';
 import { IIpfsRepository } from '../../domain/repository/i-ipfs-repository';
 import { LOGGER } from '../../infrastructure/pino-logger-service';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
-import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
+import { ClientToken } from '../../domain/model/dao/client-token';
 import { isDateCreatedInLastGivenMinutes } from '../date-service';
 
 export class CreateDaoService {
@@ -68,7 +68,7 @@ export class CreateDaoService {
         }
     }
 
-    private doesClientTokenDataMatchReadTokenData = (clientDaoToken: ClientDaoToken, daoToken: DaoToken) => {
+    private doesClientTokenDataMatchReadTokenData = (clientDaoToken: ClientToken, daoToken: DaoToken) => {
         // chainId is verified by reading token from network
         return clientDaoToken.address === daoToken.address
             && clientDaoToken.name === daoToken.name

@@ -1,6 +1,6 @@
 import { ethers, InterfaceAbi } from 'ethers';
 import { DaoToken } from '../../domain/model/dao/dao-token';
-import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
+import { TokenType } from '../../domain/model/dao/token-type';
 import { NetworkProviderService } from '../../infrastructure/network-provider-service';
 
 export class TokenDataService {
@@ -42,6 +42,20 @@ export class TokenDataService {
         return ethers.formatUnits(res, tokenDecimals);
     }
 
+    async getOwnerOfNft(tokenAddress: string, chainId: string, tokenId: number): Promise<string> {
+        const contract = new ethers.Contract(tokenAddress, this.ERC_721_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
+        return await contract.ownerOf(tokenId);
+    }
+
+    async getBalanceOfAddress(tokenAddress: string, tokenDecimals: number, userAddress: string, chainId: string): Promise<string> {
+        const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
+        // @ts-ignore
+        const res = await contract.balanceOf(userAddress);
+        return ethers.formatUnits(res, tokenDecimals);
+    }
+
+
+
     async getBlockNumber(chainId: string): Promise<number> {
         return await this.networkProviderService.getNetworkProvider(chainId).getProvider().getBlockNumber();
     }
@@ -49,7 +63,7 @@ export class TokenDataService {
     async readTokenData(tokenAddress: string, chainId: string): Promise<DaoToken | undefined> {
         try {
             const {nameRes, symbolRes, decimalsRes } = await this.readNftTokenData(tokenAddress, chainId);
-            return new DaoToken(tokenAddress, nameRes, symbolRes, DaoTokenType.NFT, chainId, decimalsRes);
+            return new DaoToken(tokenAddress, nameRes, symbolRes, TokenType.NFT, chainId, decimalsRes);
         } catch (err) {
             try {
                 const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
@@ -57,7 +71,7 @@ export class TokenDataService {
                 const symbolRes = await contract.symbol();
                 const decimalsRes = (await contract.decimals()).toString();
                 console.log(`Token ${tokenAddress} data : ${nameRes} ${symbolRes} ${decimalsRes}`);
-                return new DaoToken(tokenAddress, nameRes, symbolRes, DaoTokenType.ERC20, chainId, Number(decimalsRes));
+                return new DaoToken(tokenAddress, nameRes, symbolRes, TokenType.ERC20, chainId, Number(decimalsRes));
             } catch (err2) {
                 console.log(`Error reading token ${tokenAddress} data`, err2);
                 return undefined;

@@ -1,6 +1,7 @@
 import { IpfsProposal } from '../model/proposal/ipfs-proposal';
 import { ProposalReport } from '../model/proposal/report/proposal-report';
 import { ProposalWithReport } from '../model/proposal/proposal-with-report';
+import { ClientProposalTransaction } from '../model/proposal/client-proposal-transaction';
 
 export interface IDbProposalRepository {
     saveProposal(ipfsProposal: IpfsProposal, ipfsHash: string): Promise<void>;

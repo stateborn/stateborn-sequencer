@@ -4,13 +4,13 @@ import {
     IsDefined,
     IsISO8601,
     IsNotEmpty,
-    IsNumberString,
+    IsNumberString, IsOptional,
     IsString,
     MaxLength,
     ValidateNested
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ClientDaoToken } from './client-dao-token';
+import { ClientToken } from './client-token';
 
 export class ClientDao {
 
@@ -54,11 +54,16 @@ export class ClientDao {
 
     @AutoMap()
     @ValidateNested()
-    @Type(() => ClientDaoToken)
-    token: ClientDaoToken;
+    @Type(() => ClientToken)
+    token: ClientToken;
+
+    @IsOptional()
+    @IsString()
+    @IsNotEmpty()
+    contractAddress?: string;
 
     constructor(name: string, description: string, imageBase64: string, owners: string[], ownersMultisigThreshold: string, proposalTokenRequiredQuantity: string,
-                creationDateUtc: string, token: ClientDaoToken) {
+                creationDateUtc: string, token: ClientToken, contractAddress?: string) {
         this.name = name;
         this.description = description;
         this.imageBase64 = imageBase64;
@@ -67,5 +72,6 @@ export class ClientDao {
         this.proposalTokenRequiredQuantity = proposalTokenRequiredQuantity;
         this.creationDateUtc = creationDateUtc;
         this.token = token;
+        this.contractAddress = contractAddress;
     }
 }

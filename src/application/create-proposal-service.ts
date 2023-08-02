@@ -9,6 +9,16 @@ import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { Dao } from '../domain/model/dao/dao';
 import { isDateCreatedInLastGivenMinutes, isDateInTheFuture, isUtcDateAEqualOrAfterB } from './date-service';
 import { ProposalType } from '../domain/model/proposal/proposal-type';
+import { ClientProposalTransaction } from '../domain/model/proposal/client-proposal-transaction';
+import { ProposalTransactionType } from '../domain/model/proposal/proposal-transaction-type';
+import { TokenType } from '../domain/model/dao/token-type';
+import { ProposalTransactionData } from '../domain/model/proposal/proposal-transaction/proposal-transaction-data';
+import {
+    TransferErc20TransactionData
+} from '../domain/model/proposal/proposal-transaction/transfer-erc-20-transaction-data';
+import {
+    TransferNftTransactionData
+} from '../domain/model/proposal/proposal-transaction/transfer-nft-transaction-data';
 
 export class CreateProposalService {
 
@@ -70,6 +80,13 @@ export class CreateProposalService {
                                 throw new Error(`Creating proposal failed. For proposal type ${createProposalDto.clientProposal.proposalType} data must be undefined!`);
                             }
                         }
+                        if (createProposalDto.clientProposal.transactions) {
+                            if (dao.ipfsDao.clientDao.contractAddress) {
+                                await this.validateProposalTransactionsAndThrowErrorIfNeeded(createProposalDto.clientProposal.transactions, dao.ipfsDao.clientDao.contractAddress!, dao.ipfsDao.clientDao.token.chainId);
+                            } else {
+                                throw new Error(`Creating proposal failed. Proposal has transactions to execute but DAO ${dao.ipfsHash} is not on-chain DAO!`);
+                            }
+                        }
                         const ipfsProposal = this.mapperService.toIpfsProposal(createProposalDto);
                         const ipfsHash = await this.ipfsRepository.saveProposal(ipfsProposal);
                         LOGGER.info(`Proposal saved to IPFS: ${ipfsHash})`);
@@ -87,6 +104,44 @@ export class CreateProposalService {
             }
         } else {
             throw new Error(`Creating proposal failed. Proposal client signature is not valid.`);
+        }
+    }
+
+    private async validateProposalTransactionsAndThrowErrorIfNeeded(proposalTransactions: ClientProposalTransaction[], daoContractAddress: string, daoContractAddressChainId: string): Promise<void> {
+        for (const proposalTransaction of proposalTransactions) {
+            if (proposalTransaction.transactionType === ProposalTransactionType.TRANSFER_ERC_20_TOKENS) {
+                const tokenData: TransferErc20TransactionData = <TransferErc20TransactionData>proposalTransaction.data;
+                const token = await this.tokenDataService.readTokenData(tokenData.token.address, daoContractAddressChainId);
+                if (token === undefined) {
+                    throw new Error(`Creating proposal failed. Proposal transaction ${TokenType.ERC20} token to transfer ${tokenData.token.address} is not found!`);
+                }
+                const decimals = token.decimals;
+                const daoTokenBalance = await this.tokenDataService.getBalanceOfAddress(tokenData.token.address, decimals, daoContractAddress, daoContractAddressChainId);
+                if (Number(daoTokenBalance) < Number(tokenData.transferAmount)) {
+                    throw new Error(`Creating proposal failed. Transaction send amount it ${tokenData.transferAmount} ${token.symbol} but DAO owns ${daoTokenBalance} ${token.symbol}!`);
+                }
+                if (!Number.isInteger(Number(tokenData.transferAmount))) {
+                    throw new Error(`Creating proposal failed. Transaction send amount ${tokenData.transferAmount} ${token.symbol} is not integer!`);
+                }
+                if (tokenData.transferToAddress.trim() === daoContractAddress) {
+                    throw new Error(`Creating proposal failed. DAO cannot be transaction receiver (receiver has address ${tokenData.transferToAddress.trim()}!`);
+                }
+            } else if (proposalTransaction.transactionType === ProposalTransactionType.TRANSFER_NFT_TOKEN) {
+                const tokenData: TransferNftTransactionData = <TransferNftTransactionData>proposalTransaction.data;
+                const token = await this.tokenDataService.readTokenData(tokenData.token.address, daoContractAddressChainId);
+                if (token === undefined) {
+                    throw new Error(`Creating proposal failed. Proposal transaction ${TokenType.NFT} token to transfer ${tokenData.token.address} is not found!`);
+                }
+                const ownerOfNft = await this.tokenDataService.getOwnerOfNft(tokenData.token.address, daoContractAddressChainId, Number(tokenData.tokenId));
+                if (ownerOfNft !== daoContractAddress) {
+                    throw new Error(`Creating proposal failed. Proposal transaction NFT with address ${tokenData.token.address} id ${tokenData.tokenId} is not owned by DAO ${daoContractAddress}!`);
+                }
+                if (tokenData.transferToAddress.trim() === daoContractAddress) {
+                    throw new Error(`Creating proposal failed. DAO cannot be transaction receiver (receiver has address ${tokenData.transferToAddress.trim()}!`);
+                }
+            } else {
+                throw new Error(`Creating proposal failed. Transaction of type ${proposalTransaction.transactionType} is not supported.`);
+            }
         }
     }
 

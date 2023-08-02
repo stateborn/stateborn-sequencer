@@ -1,18 +1,18 @@
-import { DaoTokenType } from './dao-token-type';
+import { TokenType } from './token-type';
 
 export class DaoToken {
 
     address: string;
     name: string;
     symbol: string;
-    type: DaoTokenType;
+    type: TokenType;
     chainId: string;
     decimals: number;
     data?: any;
     //todo consider separating
     id?: string;
 
-    constructor(address: string, name: string, symbol: string, type: DaoTokenType, chainId: string, decimals: number, data?: any, id?: string) {
+    constructor(address: string, name: string, symbol: string, type: TokenType, chainId: string, decimals: number, data?: any, id?: string) {
         this.address = address;
         this.name = name;
         this.symbol = symbol;

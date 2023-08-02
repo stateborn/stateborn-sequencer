@@ -23,12 +23,18 @@ import { IpfsDao } from '../../domain/model/dao/ipfs-dao';
 import { DaoOrm } from './model/dao/dao-orm';
 import { TokenOrm } from './model/dao/token-orm';
 import { DaoToken } from '../../domain/model/dao/dao-token';
-import { DaoTokenType } from '../../domain/model/dao/dao-token-type';
+import { TokenType } from '../../domain/model/dao/token-type';
 import { Dao } from '../../domain/model/dao/dao';
 import { SEQUELIZE } from './sequelize-connection-service';
 import { DaoHeader } from '../../domain/model/dao/dao-header';
 import { ClientDao } from '../../domain/model/dao/client-dao';
-import { ClientDaoToken } from '../../domain/model/dao/client-dao-token';
+import { ClientToken } from '../../domain/model/dao/client-token';
+import { DaoContractOrm } from './model/dao/dao-contract-orm';
+import { ProposalTransactionType } from '../../domain/model/proposal/proposal-transaction-type';
+import { ProposalTransactionOrm } from './model/proposal-transaction-orm';
+import { ProposalTransactionStatus } from '../../domain/model/proposal/proposal-transaction-status';
+import { ClientProposalTransaction } from '../../domain/model/proposal/client-proposal-transaction';
+import { ProposalTransactionData } from '../../domain/model/proposal/proposal-transaction/proposal-transaction-data';
 
 export class DbRepository implements IDbProposalRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
 
@@ -80,36 +86,44 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
                         <string>p.get('owners_multisig_threshold', {plain: true}),
                         <string>p.get('proposal_token_required_quantity', {plain: true}),
                         (<Date>p.get('creation_date_utc', {plain: true})).toISOString(),
-                        new ClientDaoToken(
+                        new ClientToken(
                             (<any>p.get('tokens', {plain: true}))[0].address,
                             (<any>p.get('tokens', {plain: true}))[0].name,
                             (<any>p.get('tokens', {plain: true}))[0].symbol,
                             (<any>p.get('tokens', {plain: true}))[0].type,
                             (<any>p.get('tokens', {plain: true}))[0].chain_id,
                             (<any>p.get('tokens', {plain: true}))[0].decimals.toString(),
-                        )),
+                        ),
+                        (<any>p.get('dao_contracts', {plain: true}))[0]?.address,
+                    ),
                     <string>p.get('signature', {plain: true})),
                 <string>p.get('ipfs_hash', {plain: true}));
     }
 
     async saveDao(ipfsDao: IpfsDao, daoTokenId: string, ipfsHash: string): Promise<void> {
         const token = await TokenOrm.findByPk(daoTokenId);
-        try {
-            const dao = await DaoOrm.create({
-                ipfs_hash: ipfsHash,
-                name: ipfsDao.clientDao.name,
-                description: ipfsDao.clientDao.description,
-                image_base64: ipfsDao.clientDao.imageBase64,
-                owners: ipfsDao.clientDao.owners,
-                owners_multisig_threshold: ipfsDao.clientDao.ownersMultisigThreshold,
-                proposal_token_required_quantity: ipfsDao.clientDao.proposalTokenRequiredQuantity,
-                creation_date_utc: ipfsDao.clientDao.creationDateUtc,
-            });
-            // @ts-ignore
-            await dao.addToken(token);
-            await dao.save();
-        } catch (err) {
-            console.log(err);
+        const dao = await DaoOrm.create({
+            ipfs_hash: ipfsHash,
+            name: ipfsDao.clientDao.name,
+            description: ipfsDao.clientDao.description,
+            image_base64: ipfsDao.clientDao.imageBase64,
+            owners: ipfsDao.clientDao.owners,
+            owners_multisig_threshold: ipfsDao.clientDao.ownersMultisigThreshold,
+            proposal_token_required_quantity: ipfsDao.clientDao.proposalTokenRequiredQuantity,
+            creation_date_utc: ipfsDao.clientDao.creationDateUtc,
+        });
+        // @ts-ignore
+        await dao.addToken(token);
+        await dao.save();
+        if (ipfsDao.clientDao.contractAddress !== undefined) {
+            const contractAddress = await DaoContractOrm.create(
+                {
+                    address: ipfsDao.clientDao.contractAddress,
+                    chain_id: ipfsDao.clientDao.token.chainId,
+                    dao_ipfs_hash: ipfsHash,
+                }
+            );
+            await contractAddress.save();
         }
     }
 
@@ -146,7 +160,7 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
                 <string>data.get('address', {plain: true}),
                 <string>data.get('name', {plain: true}),
                 <string>data.get('symbol', {plain: true}),
-                <DaoTokenType>data.get('type', {plain: true}),
+                <TokenType>data.get('type', {plain: true}),
                 <string>data.get('chain_id', {plain: true}),
                 <any>data.get('data', {plain: true}),
                 <any>data.get('decimals', {plain: true}),
@@ -173,7 +187,7 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
     async findProposalWithReportByIpfsHash(ipfsHash: string): Promise<ProposalWithReport | undefined> {
         const props = await ProposalOrm.findOne({
             where: {ipfs_hash: ipfsHash},
-            include: [ProposalReportOrm],
+            include: [ProposalReportOrm, ProposalTransactionOrm],
         });
         if (props) {
             const proposal = this.toProposal()(props);
@@ -186,8 +200,11 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
         return undefined;
     }
 
+    //todo: requires transaction
     public async saveProposal(ipfsProposal: IpfsProposal, ipfsHash: string): Promise<void> {
-        const props = ProposalOrm.build({
+        try {
+
+            const props = ProposalOrm.build({
             creator_address: ipfsProposal.clientProposal.creatorAddress,
             title: ipfsProposal.clientProposal.title,
             description: ipfsProposal.clientProposal.description,
@@ -201,6 +218,21 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
             data: ipfsProposal.clientProposal.data,
         });
         await props.save();
+            if (ipfsProposal.clientProposal.transactions) {
+                const transactions = ipfsProposal.clientProposal.transactions!.map((_) => {
+                    return {
+                        proposal_ipfs_hash: ipfsHash,
+                        transaction_type: _.transactionType,
+                        transaction_status: ProposalTransactionStatus.SAVED,
+                        data: _.data,
+                    };
+                });
+                await ProposalTransactionOrm.bulkCreate(transactions);
+            }
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
     }
 
     public async findProposalsIpfsHashes(daoIpfsHash: string, offset: number = 0, limit: number = 10, filter?: string): Promise<string[]> {
@@ -251,7 +283,14 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
                         (<Date>p.get('start_date', {plain: true})).toISOString(),
                         (<Date>p.get('end_date', {plain: true})).toISOString(),
                         (<string>p.get('block_number', {plain: true})).toString(),
-                        <any | undefined>p.get('data', {plain: true})),
+                        <any | undefined>p.get('data', {plain: true}),
+                        (<any[]>p.get('proposal_transactions', {plain: true})).map(_ => {
+                            return new ClientProposalTransaction(
+                                <ProposalTransactionType>_.transaction_type,
+                                <ProposalTransactionData>_.data,
+                            );
+                        })
+                    ),
                     <string>p.get('author_signature', {plain: true})),
                 <string>p.get('ipfs_hash', {plain: true}));
     }
@@ -333,7 +372,7 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
 
     async findDao(daoIpfsHash: string): Promise<Dao | undefined> {
         const props = await DaoOrm.findByPk(daoIpfsHash, {
-            include: [TokenOrm],
+            include: [TokenOrm, DaoContractOrm],
         });
         return this.toDao()(props!);
     }

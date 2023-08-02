@@ -1,8 +1,8 @@
 import { AutoMap } from '@automapper/classes';
 import { IsEnum, IsNumberString, IsString } from 'class-validator';
-import { DaoTokenType } from '../../../domain/model/dao/dao-token-type';
+import { TokenType } from './token-type';
 
-export class ClientDaoToken {
+export class ClientToken {
 
     @AutoMap()
     @IsString()
@@ -17,8 +17,8 @@ export class ClientDaoToken {
     symbol: string;
 
     @AutoMap()
-    @IsEnum(DaoTokenType)
-    type: DaoTokenType;
+    @IsEnum(TokenType)
+    type: TokenType;
 
     @AutoMap()
     @IsNumberString()
@@ -29,7 +29,7 @@ export class ClientDaoToken {
     decimals: string;
 
 
-    constructor(address: string, name: string, symbol: string, type: DaoTokenType, chainId: string, decimals: string) {
+    constructor(address: string, name: string, symbol: string, type: TokenType, chainId: string, decimals: string) {
         this.address = address;
         this.name = name;
         this.symbol = symbol;

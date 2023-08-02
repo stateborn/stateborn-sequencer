@@ -2,6 +2,7 @@ import { AutoMap } from '@automapper/classes';
 import { ProposalType } from './proposal-type';
 import { IProposalData } from './i-proposal-data';
 import {
+    IsArray, IsDecimal, IsDefined,
     IsEnum,
     IsISO8601,
     IsNotEmpty,
@@ -11,6 +12,7 @@ import {
     IsString,
     MaxLength
 } from 'class-validator';
+import { ClientProposalTransaction } from './client-proposal-transaction';
 
 export class ClientProposal {
 
@@ -37,6 +39,7 @@ export class ClientProposal {
 
     @AutoMap()
     @IsEnum(ProposalType)
+    @IsDefined()
     proposalType: ProposalType;
 
     @AutoMap()
@@ -59,7 +62,14 @@ export class ClientProposal {
     @IsOptional()
     data?: IProposalData;
 
-    constructor(creatorAddress: string, daoIpfsHash: string, title: string, description: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, blockNumber: string, data?: IProposalData) {
+    @AutoMap()
+    @IsArray()
+    @IsNotEmpty()
+    @IsOptional()
+    transactions?: ClientProposalTransaction[];
+
+    constructor(creatorAddress: string, daoIpfsHash: string, title: string, description: string, proposalType: ProposalType, startDateUtc: string, endDateUtc: string, blockNumber: string, data?: IProposalData,
+                transactions?: ClientProposalTransaction[]) {
         this.creatorAddress = creatorAddress;
         this.daoIpfsHash = daoIpfsHash;
         this.title = title;
@@ -69,5 +79,6 @@ export class ClientProposal {
         this.endDateUtc = endDateUtc;
         this.blockNumber = blockNumber;
         this.data = data;
+        this.transactions = transactions;
     }
 }

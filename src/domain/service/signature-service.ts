@@ -5,6 +5,9 @@ import { Vote } from '../model/vote/vote';
 import { ClientProposal } from '../model/proposal/client-proposal';
 import { ClientVote } from '../model/vote/client-vote';
 import { ClientDao } from '../model/dao/client-dao';
+import { ProposalTransactionType } from '../model/proposal/proposal-transaction-type';
+import { TransferErc20TransactionData } from '../model/proposal/proposal-transaction/transfer-erc-20-transaction-data';
+import { TransferNftTransactionData } from '../model/proposal/proposal-transaction/transfer-nft-transaction-data';
 
 export class SignatureService {
 
@@ -40,6 +43,32 @@ export class SignatureService {
             types.push('bytes');
             const options = (<OptionsClientProposalData>clientProposal.data).options.join('');
             values.push(ethers.toUtf8Bytes(options));
+        }
+        if (clientProposal.transactions) {
+            clientProposal.transactions.forEach((transaction) => {
+                types.push('bytes');
+                values.push(ethers.toUtf8Bytes(transaction.transactionType));
+                switch (transaction.transactionType) {
+                    case ProposalTransactionType.TRANSFER_ERC_20_TOKENS:
+                        types.push('address');
+                        values.push((<TransferErc20TransactionData>transaction.data).token.address);
+                        types.push('address');
+                        values.push((<TransferErc20TransactionData>transaction.data).transferToAddress);
+                        types.push('uint256');
+                        values.push(Number((<TransferErc20TransactionData>transaction.data).transferAmount));
+                        break;
+                    case ProposalTransactionType.TRANSFER_NFT_TOKEN:
+                        types.push('address');
+                        values.push((<TransferNftTransactionData>transaction.data).token.address);
+                        types.push('address');
+                        values.push((<TransferNftTransactionData>transaction.data).transferToAddress);
+                        types.push('uint256');
+                        values.push(Number((<TransferNftTransactionData>transaction.data).tokenId));
+                        break;
+                    default:
+                        throw new Error(`Transaction type ${transaction.transactionType} not supported`);
+                }
+            });
         }
         // Same as `abi.encodePacked` in Solidity
         return ethers.solidityPacked(types, values);
@@ -86,6 +115,10 @@ export class SignatureService {
             clientDao.token.address,
             encodeBytes32String(clientDao.token.chainId),
         ];
+        if (clientDao.contractAddress) {
+            types.push('address');
+            values.push(clientDao.contractAddress);
+        }
         for (const owner of clientDao.owners) {
             types.push('address');
             values.push(owner);
