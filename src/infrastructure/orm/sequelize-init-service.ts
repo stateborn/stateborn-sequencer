@@ -9,7 +9,14 @@ import { initializeDaoAssociations } from './model/dao/orm-dao-associations';
 import { DaoOrm } from './model/dao/dao-orm';
 import { SEQUELIZE } from './sequelize-connection-service';
 import { DaoContractOrm } from './model/dao/dao-contract-orm';
-import { ProposalTransactionOrm } from './model/proposal-transaction-orm';
+import { BlockchainProposalTransactionOrm } from './model/proposal-transaction/blockchain-proposal-transaction-orm';
+import { BlockchainProposalOrm } from './model/proposal-transaction/blockchain-proposal-orm';
+import {
+    BlockchainProposalChainTransaction
+} from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-chain-transaction';
+import {
+    BlockchainProposalChainTransactionOrm
+} from './model/proposal-transaction/blockchain-proposal-chain-transaction-orm';
 
 export const syncOrm = async () => {
     try {
@@ -38,7 +45,11 @@ export const syncOrm = async () => {
         await ProposalOrm.sync();
         await VoteOrm.sync();
         await ProposalReportOrm.sync();
-        await ProposalTransactionOrm.sync();
+        await BlockchainProposalOrm.sync();
+        await BlockchainProposalOrm.hasMany(BlockchainProposalTransactionOrm, {foreignKey: {name: 'proposal_ipfs_hash', allowNull: false}});
+        await BlockchainProposalTransactionOrm.sync();
+        await BlockchainProposalOrm.hasMany(BlockchainProposalChainTransactionOrm, {foreignKey: {name: 'proposal_ipfs_hash', allowNull: false}});
+        await BlockchainProposalChainTransactionOrm.sync();
         await SEQUELIZE.query("CREATE INDEX if not exists proposal_title_full_text_index_2 ON proposals USING GIN (to_tsvector('simple', title))");
         await SEQUELIZE.query("CREATE INDEX if not exists proposal_ipfs_hash_full_text_index ON proposals USING GIN (to_tsvector('simple', ipfs_hash))");
         await SEQUELIZE.query("CREATE INDEX if not exists dao_name_full_text_index ON daos USING GIN (to_tsvector('simple', name))");

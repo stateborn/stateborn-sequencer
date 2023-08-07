@@ -12,6 +12,8 @@ import { Dao } from '../../domain/model/dao/dao';
 import { DaoDto } from '../../interfaces/dto/dao/dao-dto';
 import { ProposalReportDto } from '../../interfaces/dto/report/proposal-report-dto';
 import { ProposalReport } from '../../domain/model/proposal/report/proposal-report';
+import { BlockchainProposal } from '../../domain/model/proposal/proposal-transaction/blockchain-proposal';
+import { BlockchainProposalDto } from '../../interfaces/dto/proposal/blockchain-proposal-dto';
 
 export class MapperService implements IMapperService {
 
@@ -44,4 +46,9 @@ export class MapperService implements IMapperService {
     toDaoDto(dao: Dao): DaoDto {
         return this.automapperService.map(dao, Dao, DaoDto);
     }
+
+    toBlockchainProposalDto(blockchainProposal: BlockchainProposal): BlockchainProposalDto {
+        return this.automapperService.map(blockchainProposal, BlockchainProposal, BlockchainProposalDto);
+    }
+
 }

@@ -30,11 +30,29 @@ import { DaoHeader } from '../../domain/model/dao/dao-header';
 import { ClientDao } from '../../domain/model/dao/client-dao';
 import { ClientToken } from '../../domain/model/dao/client-token';
 import { DaoContractOrm } from './model/dao/dao-contract-orm';
-import { ProposalTransactionType } from '../../domain/model/proposal/proposal-transaction-type';
-import { ProposalTransactionOrm } from './model/proposal-transaction-orm';
-import { ProposalTransactionStatus } from '../../domain/model/proposal/proposal-transaction-status';
+import { BlockchainProposalTransactionType } from '../../domain/model/proposal/blockchain-proposal-transaction-type';
+import { BlockchainProposalTransactionOrm } from './model/proposal-transaction/blockchain-proposal-transaction-orm';
+import { BlockchainProposalStatus } from '../../domain/model/proposal/blockchain-proposal-status';
 import { ClientProposalTransaction } from '../../domain/model/proposal/client-proposal-transaction';
 import { ProposalTransactionData } from '../../domain/model/proposal/proposal-transaction/proposal-transaction-data';
+import { ProposalWithReportAndBlockchainProposal } from '../../domain/model/proposal/proposal-with-report-and-blockchain-proposal';
+import { ProposalTransaction } from '../../domain/model/proposal/proposal-transaction/proposal-transaction';
+import { BlockchainProposalOrm } from './model/proposal-transaction/blockchain-proposal-orm';
+import {
+    BlockchainProposalChainTransactionStatus
+} from '../../domain/model/proposal/blockchain-proposal-chain-transaction-status';
+import { BlockchainProposalChainTransactionOrm } from './model/proposal-transaction/blockchain-proposal-chain-transaction-orm';
+import { BlockchainProposal } from '../../domain/model/proposal/proposal-transaction/blockchain-proposal';
+import {
+    BlockchainProposalTransaction
+} from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-transaction';
+import {
+    BlockchainProposalChainTransaction
+} from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-chain-transaction';
+import { BlockchainProposalTransactionDto } from '../../interfaces/dto/proposal/blockchain-proposal-transaction-dto';
+import {
+    BlockchainProposalChainTransactionDto
+} from '../../interfaces/dto/proposal/blockchain-proposal-chain-transaction-dto';
 
 export class DbRepository implements IDbProposalRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
 
@@ -185,49 +203,96 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
     }
 
     async findProposalWithReportByIpfsHash(ipfsHash: string): Promise<ProposalWithReport | undefined> {
+        try {
+            const props = await ProposalOrm.findOne({
+                where: {ipfs_hash: ipfsHash},
+                include: [ProposalReportOrm, BlockchainProposalOrm, { model: BlockchainProposalTransactionOrm, where: {proposal_ipfs_hash: ipfsHash}}],
+            });
+            if (props) {
+                const proposal = this.toProposal()(props);
+                let proposalReport = undefined;
+                if (props.get('proposal_report', {plain: true}) !== null) {
+                    proposalReport = this.toProposalReport()(props);
+                }
+                return new ProposalWithReport(proposal, proposalReport);
+            }
+            return undefined;
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
+    }
+
+    async findProposalWithReportAndBlockchainProposal(ipfsHash: string): Promise<ProposalWithReportAndBlockchainProposal | undefined> {
         const props = await ProposalOrm.findOne({
             where: {ipfs_hash: ipfsHash},
-            include: [ProposalReportOrm, ProposalTransactionOrm],
+            include: [ProposalReportOrm, BlockchainProposalOrm, BlockchainProposalTransactionOrm, BlockchainProposalChainTransactionOrm],
         });
         if (props) {
             const proposal = this.toProposal()(props);
             let proposalReport = undefined;
+            let blockchainProposal = undefined;
             if (props.get('proposal_report', {plain: true}) !== null) {
                 proposalReport = this.toProposalReport()(props);
             }
-            return new ProposalWithReport(proposal, proposalReport);
+            if (props.get('blockchain_proposal', {plain: true}) !== null) {
+                const bp = <any>props.get('blockchain_proposal', {plain: true});
+                const bpt = <any[]>props.get('blockchain_proposal_transactions', {plain: true});
+                const bpct = <any[]>props.get('blockchain_proposal_chain_transactions', {plain: true});
+                blockchainProposal = new BlockchainProposal(
+                    <string>bp.proposal_ipfs_hash,
+                    <string>bp.chain_id,
+                    <BlockchainProposalStatus>bp.status,
+                    bpt.map(_ => new BlockchainProposalTransaction(
+                        <string>_.id,
+                        <BlockchainProposalTransactionType>_.transaction_type,
+                        <any>_.data,
+                    )),
+                    bpct.map(_ => new BlockchainProposalChainTransaction(
+                        <string>_.tx_hash,
+                        <BlockchainProposalChainTransactionStatus>_.transaction_status,
+                    )),
+                    <string>bp.address,
+                );
+            }
+            return new ProposalWithReportAndBlockchainProposal(proposal, proposalReport, blockchainProposal);
         }
         return undefined;
     }
 
-    //todo: requires transaction
-    public async saveProposal(ipfsProposal: IpfsProposal, ipfsHash: string): Promise<void> {
-        try {
 
+    //todo: requires transaction
+    public async saveProposal(ipfsProposal: IpfsProposal, ipfsHash: string, onchainProposalChainId?: string): Promise<void> {
+        try {
             const props = ProposalOrm.build({
-            creator_address: ipfsProposal.clientProposal.creatorAddress,
-            title: ipfsProposal.clientProposal.title,
-            description: ipfsProposal.clientProposal.description,
-            proposal_type_type: ipfsProposal.clientProposal.proposalType,
-            ipfs_hash: ipfsHash,
-            creator_signature: ipfsProposal.creatorSignature,
-            start_date: ipfsProposal.clientProposal.startDateUtc,
-            end_date: ipfsProposal.clientProposal.endDateUtc,
-            dao_ipfs_hash: ipfsProposal.clientProposal.daoIpfsHash,
-            block_number: ipfsProposal.clientProposal.blockNumber,
-            data: ipfsProposal.clientProposal.data,
-        });
-        await props.save();
+                creator_address: ipfsProposal.clientProposal.creatorAddress,
+                title: ipfsProposal.clientProposal.title,
+                description: ipfsProposal.clientProposal.description,
+                proposal_type_type: ipfsProposal.clientProposal.proposalType,
+                ipfs_hash: ipfsHash,
+                creator_signature: ipfsProposal.creatorSignature,
+                start_date: ipfsProposal.clientProposal.startDateUtc,
+                end_date: ipfsProposal.clientProposal.endDateUtc,
+                dao_ipfs_hash: ipfsProposal.clientProposal.daoIpfsHash,
+                block_number: ipfsProposal.clientProposal.blockNumber,
+                data: ipfsProposal.clientProposal.data,
+            });
+            await props.save();
             if (ipfsProposal.clientProposal.transactions) {
+                const onchainProposal = await BlockchainProposalOrm.build({
+                    proposal_ipfs_hash: ipfsHash,
+                    chain_id: onchainProposalChainId,
+                    status: BlockchainProposalStatus.CREATED_OFFCHAIN,
+                });
+                await onchainProposal.save();
                 const transactions = ipfsProposal.clientProposal.transactions!.map((_) => {
                     return {
                         proposal_ipfs_hash: ipfsHash,
                         transaction_type: _.transactionType,
-                        transaction_status: ProposalTransactionStatus.SAVED,
                         data: _.data,
                     };
                 });
-                await ProposalTransactionOrm.bulkCreate(transactions);
+                await BlockchainProposalTransactionOrm.bulkCreate(transactions);
             }
         } catch (err) {
             console.log(err);
@@ -284,9 +349,9 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
                         (<Date>p.get('end_date', {plain: true})).toISOString(),
                         (<string>p.get('block_number', {plain: true})).toString(),
                         <any | undefined>p.get('data', {plain: true}),
-                        (<any[]>p.get('proposal_transactions', {plain: true})).map(_ => {
+                        (<any[]>p.get('blockchain_proposal_transactions', {plain: true})).map(_ => {
                             return new ClientProposalTransaction(
-                                <ProposalTransactionType>_.transaction_type,
+                                <BlockchainProposalTransactionType>_.transaction_type,
                                 <ProposalTransactionData>_.data,
                             );
                         })
@@ -303,11 +368,26 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
                     (<any>p.get('proposal_report', {plain: true})).proposal_ipfs_hash,
                     (<any>p.get('proposal_report', {plain: true})).merkle_root_hex,
                     (<any>p.get('proposal_report', {plain: true})).user_votes,
-                    (<any>p.get('proposal_report', {plain: true})).proposal_result,
+                    (<any>p.get('proposal_report', {plain: true})).result,
                 ),
             );
     }
 
+    private toProposalTransaction() {
+        return (p: any) =>
+            new ProposalTransaction(
+               new ClientProposalTransaction(
+                   <BlockchainProposalTransactionType>p.transaction_type,
+                   <any>p.data
+               ),
+                <string>p.id,
+                <string>p.proposal_ipfs_hash,
+                <BlockchainProposalStatus>p.transaction_status,
+                p.createdAt,
+                p.updatedAt,
+                undefined,
+            );
+    }
 
     async findVotes(proposalIpfsHash: string, offset?: number, limit?: number): Promise<Vote[]> {
         const props = await VoteOrm.findAll({
@@ -412,5 +492,68 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
         });
         // @ts-ignore
         return Number(totalVotes[0].total_votes).toFixed(0);
+    }
+
+    async createProposalBlockchainChainTransaction(proposalIpfsHash: string, txHash: string, transactionStatus: BlockchainProposalChainTransactionStatus): Promise<void> {
+        const blockchainProposalChainTransaction = BlockchainProposalChainTransactionOrm.build({
+            proposal_ipfs_hash: proposalIpfsHash,
+            tx_hash: txHash,
+            transaction_status: transactionStatus,
+        });
+        await blockchainProposalChainTransaction.save();
+    }
+
+    async updateProposalTransactions(proposalIpfsHash: string, transactionStatus: BlockchainProposalStatus, txHash: string): Promise<void> {
+        await SEQUELIZE.query('UPDATE proposal_transactions SET transaction_status = :transactionStatus, tx_hash = :txHash WHERE proposal_ipfs_hash = :proposalIpfsHash', {
+            replacements: {
+                transactionStatus: transactionStatus,
+                txHash: txHash,
+                proposalIpfsHash: proposalIpfsHash,
+            },
+            type: QueryTypes.UPDATE,
+        });
+    }
+
+    async updateBlockchainProposal(proposalIpfsHash: string, address: string, chainId: string, blockchainProposalStatus: BlockchainProposalStatus): Promise<void> {
+        await SEQUELIZE.query('UPDATE blockchain_proposals SET status = :status, address = :address WHERE proposal_ipfs_hash = :proposalIpfsHash', {
+            replacements: {
+                status: blockchainProposalStatus,
+                address: address,
+                proposalIpfsHash: proposalIpfsHash,
+            },
+            type: QueryTypes.UPDATE,
+        });
+    }
+
+    async findBlockchainProposal(proposalIpfsHash: string): Promise<BlockchainProposal | undefined> {
+        const data = await BlockchainProposalOrm.findOne({
+            include: [BlockchainProposalTransactionOrm, BlockchainProposalChainTransactionOrm],
+            where: {
+                proposal_ipfs_hash: proposalIpfsHash,
+            }
+        });
+        if (data) {
+            return this.toBlockchainProposal(data);
+        } else {
+            return undefined;
+        }
+    }
+
+    private toBlockchainProposal<TModelAttributes>(data: any) {
+        return new BlockchainProposal(
+            <string>data.get('proposal_ipfs_hash', {plain: true}),
+            <string>data.get('chain_id', {plain: true}),
+            <BlockchainProposalStatus>data.get('status', {plain: true}),
+            (<any[]>data.get('blockchain_proposal_transactions', {plain: true})).map((_) => new BlockchainProposalTransaction(
+                <string>_.id,
+                <BlockchainProposalTransactionType>_.transaction_type,
+                <any>_.data,
+            )),
+            (<any[]>data.get('blockchain_proposal_chain_transactions', {plain: true})).map((_) => new BlockchainProposalChainTransaction(
+                <string>_.tx_hash,
+                <BlockchainProposalChainTransactionStatus>_.transaction_status,
+            )),
+            <string>data.get('address', {plain: true}),
+        );
     }
 }

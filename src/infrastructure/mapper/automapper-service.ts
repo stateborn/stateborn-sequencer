@@ -13,6 +13,19 @@ import { ProposalReport } from '../../domain/model/proposal/report/proposal-repo
 import { ProposalReportDto } from '../../interfaces/dto/report/proposal-report-dto';
 import { Dao } from '../../domain/model/dao/dao';
 import { DaoDto } from '../../interfaces/dto/dao/dao-dto';
+import { ProposalTransaction } from '../../domain/model/proposal/proposal-transaction/proposal-transaction';
+import { BlockchainProposal } from '../../domain/model/proposal/proposal-transaction/blockchain-proposal';
+import { BlockchainProposalDto } from '../../interfaces/dto/proposal/blockchain-proposal-dto';
+import {
+    BlockchainProposalTransaction
+} from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-transaction';
+import { BlockchainProposalTransactionDto } from '../../interfaces/dto/proposal/blockchain-proposal-transaction-dto';
+import {
+    BlockchainProposalChainTransaction
+} from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-chain-transaction';
+import {
+    BlockchainProposalChainTransactionDto
+} from '../../interfaces/dto/proposal/blockchain-proposal-chain-transaction-dto';
 
 export class AutomapperService {
 
@@ -36,6 +49,11 @@ export class AutomapperService {
             forMember((d) => d.clientDao, mapFrom((s) => s.ipfsDao.clientDao)),
             forMember((d) => d.signature, mapFrom((s) => s.ipfsDao.signature)),
         );
+        createMap(this.mapper, BlockchainProposal, BlockchainProposalDto);
+        createMap(this.mapper, BlockchainProposalTransaction, BlockchainProposalTransactionDto,
+            forMember((d) => d.data, mapFrom((s) => s.data)),
+        );
+        createMap(this.mapper, BlockchainProposalChainTransaction, BlockchainProposalChainTransactionDto);
     }
 
     public map(source: any, sourceClass: any, destinationClass: any): any {

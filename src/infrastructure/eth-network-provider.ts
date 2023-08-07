@@ -1,4 +1,4 @@
-import { ethers, Network } from 'ethers';
+import { ethers, Network, Signer } from 'ethers';
 import { getProperty } from '../application/env-var/env-var-service';
 import { IEthProvider } from '../application/i-eth-provider';
 import { NetworkProviderService } from './network-provider-service';
@@ -9,6 +9,10 @@ export class EthNetworkProvider implements IEthProvider {
 
     getProvider(): ethers.JsonRpcProvider {
         return this.provider;
+    }
+
+    getSigner(): Signer {
+        throw new Error('Not implemented yet');
     }
 
 }

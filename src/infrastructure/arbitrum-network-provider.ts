@@ -1,4 +1,4 @@
-import { ethers, Network } from 'ethers';
+import { ethers, Network, Signer } from 'ethers';
 import { IEthProvider } from '../application/i-eth-provider';
 import { NetworkProviderService } from './network-provider-service';
 import { getProperty } from '../application/env-var/env-var-service';
@@ -11,4 +11,7 @@ export class ArbitrumNetworkProvider implements IEthProvider {
         return this.provider;
     }
 
+    getSigner(): Signer {
+        throw new Error('Not implemented yet');
+    }
 }

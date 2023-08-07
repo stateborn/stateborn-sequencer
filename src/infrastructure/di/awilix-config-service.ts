@@ -1,4 +1,4 @@
-import { asClass, Lifetime, createContainer, InjectionMode } from 'awilix';
+import { asClass, createContainer, InjectionMode, Lifetime } from 'awilix';
 import { DbRepository } from '../orm/db-repository';
 import { IpfsRepository } from '../ipfs/ipfs-repository';
 import { CreateProposalService } from '../../application/create-proposal-service';
@@ -17,6 +17,8 @@ import { ArbitrumNetworkProvider } from '../arbitrum-network-provider';
 import { NetworkProviderService } from '../network-provider-service';
 import { PolygonNetworkProvider } from '../polygon-network-provider';
 import { LocalhostNetworkProvider } from '../localhost-network-provider';
+import { DaoTransactionService } from '../../application/dao/dao-transaction-service';
+import { ProposalTransactionService } from '../../application/proposal-transaction-service';
 
 export const DI_CONTAINER = createContainer({
     injectionMode: InjectionMode.PROXY
@@ -89,6 +91,12 @@ export const initializeAwilixDI = () => {
             lifetime: Lifetime.SINGLETON,
         }),
         tokenDataService: asClass(TokenDataService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        daoTransactionService: asClass(DaoTransactionService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        proposalTransactionService: asClass(ProposalTransactionService, {
             lifetime: Lifetime.SINGLETON,
         })
     });

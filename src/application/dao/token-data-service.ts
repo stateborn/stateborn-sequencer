@@ -39,7 +39,8 @@ export class TokenDataService {
         const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
         // @ts-ignore
         const res = await contract.balanceOf(userAddress, {blockTag: block});
-        return ethers.formatUnits(res, tokenDecimals);
+        //todo check if this is correct, maybe tokens can be fractional
+        return Number(ethers.formatUnits(res, tokenDecimals)).toFixed(0);
     }
 
     async getOwnerOfNft(tokenAddress: string, chainId: string, tokenId: number): Promise<string> {
@@ -51,10 +52,9 @@ export class TokenDataService {
         const contract = new ethers.Contract(tokenAddress, this.ERC_20_ABI, this.networkProviderService.getNetworkProvider(chainId).getProvider());
         // @ts-ignore
         const res = await contract.balanceOf(userAddress);
-        return ethers.formatUnits(res, tokenDecimals);
+        //todo check if this is correct, maybe tokens can be fractional
+        return Number(ethers.formatUnits(res, tokenDecimals)).toFixed(0);
     }
-
-
 
     async getBlockNumber(chainId: string): Promise<number> {
         return await this.networkProviderService.getNetworkProvider(chainId).getProvider().getBlockNumber();

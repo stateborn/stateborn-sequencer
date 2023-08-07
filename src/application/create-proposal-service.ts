@@ -10,7 +10,7 @@ import { Dao } from '../domain/model/dao/dao';
 import { isDateCreatedInLastGivenMinutes, isDateInTheFuture, isUtcDateAEqualOrAfterB } from './date-service';
 import { ProposalType } from '../domain/model/proposal/proposal-type';
 import { ClientProposalTransaction } from '../domain/model/proposal/client-proposal-transaction';
-import { ProposalTransactionType } from '../domain/model/proposal/proposal-transaction-type';
+import { BlockchainProposalTransactionType } from '../domain/model/proposal/blockchain-proposal-transaction-type';
 import { TokenType } from '../domain/model/dao/token-type';
 import { ProposalTransactionData } from '../domain/model/proposal/proposal-transaction/proposal-transaction-data';
 import {
@@ -90,7 +90,7 @@ export class CreateProposalService {
                         const ipfsProposal = this.mapperService.toIpfsProposal(createProposalDto);
                         const ipfsHash = await this.ipfsRepository.saveProposal(ipfsProposal);
                         LOGGER.info(`Proposal saved to IPFS: ${ipfsHash})`);
-                        await this.dbProposalRepository.saveProposal(ipfsProposal, ipfsHash);
+                        await this.dbProposalRepository.saveProposal(ipfsProposal, ipfsHash, dao.ipfsDao.clientDao.token.chainId);
                         LOGGER.info(`Proposal saved ${ipfsHash} to db`);
                     } else {
                         throw new Error(`Creating proposal failed. Proposal dates are not correct. Start date: ${createProposalDto.clientProposal.startDateUtc} 
@@ -109,7 +109,7 @@ export class CreateProposalService {
 
     private async validateProposalTransactionsAndThrowErrorIfNeeded(proposalTransactions: ClientProposalTransaction[], daoContractAddress: string, daoContractAddressChainId: string): Promise<void> {
         for (const proposalTransaction of proposalTransactions) {
-            if (proposalTransaction.transactionType === ProposalTransactionType.TRANSFER_ERC_20_TOKENS) {
+            if (proposalTransaction.transactionType === BlockchainProposalTransactionType.TRANSFER_ERC_20_TOKENS) {
                 const tokenData: TransferErc20TransactionData = <TransferErc20TransactionData>proposalTransaction.data;
                 const token = await this.tokenDataService.readTokenData(tokenData.token.address, daoContractAddressChainId);
                 if (token === undefined) {
@@ -126,7 +126,7 @@ export class CreateProposalService {
                 if (tokenData.transferToAddress.trim() === daoContractAddress) {
                     throw new Error(`Creating proposal failed. DAO cannot be transaction receiver (receiver has address ${tokenData.transferToAddress.trim()}!`);
                 }
-            } else if (proposalTransaction.transactionType === ProposalTransactionType.TRANSFER_NFT_TOKEN) {
+            } else if (proposalTransaction.transactionType === BlockchainProposalTransactionType.TRANSFER_NFT_TOKEN) {
                 const tokenData: TransferNftTransactionData = <TransferNftTransactionData>proposalTransaction.data;
                 const token = await this.tokenDataService.readTokenData(tokenData.token.address, daoContractAddressChainId);
                 if (token === undefined) {

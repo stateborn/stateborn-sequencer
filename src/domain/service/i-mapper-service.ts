@@ -10,6 +10,8 @@ import { Dao } from '../model/dao/dao';
 import { DaoDto } from '../../interfaces/dto/dao/dao-dto';
 import { ProposalReport } from '../model/proposal/report/proposal-report';
 import { ProposalReportDto } from '../../interfaces/dto/report/proposal-report-dto';
+import { BlockchainProposal } from '../model/proposal/proposal-transaction/blockchain-proposal';
+import { BlockchainProposalDto } from '../../interfaces/dto/proposal/blockchain-proposal-dto';
 
 export interface IMapperService {
     toIpfsProposal(createProposalDto: CreateProposalDto): IpfsProposal;
@@ -18,4 +20,5 @@ export interface IMapperService {
     toDaoDto(dao: Dao): DaoDto;
     toIpfsVote(createVoteDto: CreateVoteDto): IpfsVote;
     toVoteDto(vote: Vote): VoteDto;
+    toBlockchainProposalDto(blockchainProposal: BlockchainProposal): BlockchainProposalDto;
 }
