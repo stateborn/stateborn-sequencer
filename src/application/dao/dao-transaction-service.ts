@@ -10,6 +10,9 @@ import { BlockchainProposalTransactionType } from '../../domain/model/proposal/b
 import {
     TransferNftTransactionData
 } from '../../domain/model/proposal/proposal-transaction/transfer-nft-transaction-data';
+import {
+    ProposalWithReportAndBlockchainProposal
+} from '../../domain/model/proposal/proposal-with-report-and-blockchain-proposal';
 
 export class DaoTransactionService {
 
@@ -20,9 +23,14 @@ export class DaoTransactionService {
         'function sendNft(bytes memory proposalId, address tokenAddress, address to, uint256 tokenId) external',
         'function proposals(bytes) public view returns (address)',
         'event ProposalCreated(bytes proposalId, address proposalAddress)',
-        'function getSequencerDisputeEndTime() public view returns (uint256)',
-        'function getUserDisputeEndTime() public view returns (uint256)'
     ];
+
+    private readonly PROPOSAL_ABI: InterfaceAbi = [
+        'function getChallengeSequencerEndTime() public view returns (uint256)',
+        'function getChallengeUserEndTime() public view returns (uint256)',
+        'function executeBatch() public payable',
+    ];
+
 
     private networkProviderService: NetworkProviderService;
 
@@ -38,14 +46,14 @@ export class DaoTransactionService {
             const data = proposal.ipfsProposal.clientProposal.transactions!.map((transaction) => {
                 let data;
                 if (transaction.transactionType === BlockchainProposalTransactionType.TRANSFER_ERC_20_TOKENS) {
-                    data = contract.interface.encodeFunctionData('sendErc20', [
+                    data = contract.interface.encodeFunctionData('sendErc20(bytes,address,address,uint256)', [
                         ethers.toUtf8Bytes(proposal.ipfsHash),
                         (<TransferErc20TransactionData>transaction.data).token.address,
                         (<TransferErc20TransactionData>transaction.data).transferToAddress,
-                        Number((<TransferErc20TransactionData>transaction.data).transferAmount),
+                        ethers.parseUnits((<TransferErc20TransactionData>transaction.data).transferAmount, Number((<TransferErc20TransactionData>transaction.data).token.decimals)),
                     ]);
                 } else if (transaction.transactionType === BlockchainProposalTransactionType.TRANSFER_NFT_TOKEN) {
-                    data = contract.interface.encodeFunctionData('sendNft', [
+                    data = contract.interface.encodeFunctionData('sendNft(bytes,address,address,uint256)', [
                         ethers.toUtf8Bytes(proposal.ipfsHash),
                         (<TransferNftTransactionData>transaction.data).token.address,
                         (<TransferNftTransactionData>transaction.data).transferToAddress,
@@ -54,7 +62,7 @@ export class DaoTransactionService {
                 } else {
                     throw new Error(`Unsupported transaction type: ${transaction.transactionType}`);
                 }
-                return ethers.toUtf8Bytes(data);
+                return data;
             });
             let txId = '';
             const promise: Promise<string[]> = new Promise((resolve, reject) => {
@@ -79,11 +87,12 @@ export class DaoTransactionService {
         }
     }
 
-    public async executeProposalTransactions(proposal: Proposal, dao: ClientDao, proposalReport: ProposalReport): Promise<string> {
+    public async executeProposalTransactions(proposal: ProposalWithReportAndBlockchainProposal): Promise<string> {
         try {
-            const contract = new ethers.Contract(dao.contractAddress!, this.DAO_ABI,
-                this.networkProviderService.getNetworkProvider(dao.token.chainId).getSigner());
-            const res =await  contract.getSequencerDisputeEndTime();
+            const contract = new ethers.Contract(proposal.blockchainProposal?.address!,
+                this.PROPOSAL_ABI,
+                this.networkProviderService.getNetworkProvider(proposal.blockchainProposal?.chainId!).getSigner());
+            const res = await  contract.executeBatch();
             return 'asdf';
         } catch (err) {
             console.log(err);

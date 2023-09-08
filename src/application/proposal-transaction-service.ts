@@ -61,7 +61,7 @@ export class ProposalTransactionService {
     public async executeProposalTransactions(proposalIpfsHash: string): Promise<void> {
         const proposal = await this.dbProposalRepository.findProposalWithReportAndBlockchainProposal(proposalIpfsHash);
         const dao = await this.dbDaoRepository.findDao(proposal!.proposal.ipfsProposal.clientProposal.daoIpfsHash);
-        const proposalTxId = await this.daoTransactionService.executeProposalTransactions(proposal!.proposal, dao!.ipfsDao.clientDao, proposal!.proposalReport!);
+        const proposalTxId = await this.daoTransactionService.executeProposalTransactions(proposal!);
     }
 
 }

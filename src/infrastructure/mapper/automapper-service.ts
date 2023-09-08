@@ -40,6 +40,7 @@ export class AutomapperService {
         );
         createMap(this.mapper, ProposalReport, ProposalReportDto,
             forMember((d) => d.merkleRootHex, mapFrom((s) => s.ipfsProposalReport.merkleRootHex)),
+            forMember((d) => d.proposalResult, mapFrom((s) => s.ipfsProposalReport.proposalResult)),
         );
         createMap(this.mapper, CreateVoteDto, IpfsVote);
         createMap(this.mapper, Vote, VoteDto,

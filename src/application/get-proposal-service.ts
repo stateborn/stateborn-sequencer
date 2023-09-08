@@ -2,7 +2,6 @@ import { IDbProposalRepository } from '../domain/repository/i-db-proposal-reposi
 import { MapperService } from './mapper/mapper-service';
 import { isExpired } from './date-service';
 import { ProposalReportService } from './proposal-report-service';
-import { DaoTransactionService } from './dao/dao-transaction-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { ProposalTransactionService } from './proposal-transaction-service';
 
@@ -30,11 +29,11 @@ export class GetProposalService {
     public async getProposal(ipfsHash: string) {
         let proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
         if (proposalWithReport !== undefined) {
-            // if (isExpired(proposalWithReport.proposal.ipfsProposal.clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
-            if (true) {
+            if (isExpired(proposalWithReport.proposal.ipfsProposal.clientProposal.endDateUtc) && proposalWithReport.proposalReport === undefined) {
+            // if (true) {
                 await this.proposalReportService.calculateReport(ipfsHash);
                 proposalWithReport = await this.dbProposalRepository.findProposalWithReportByIpfsHash(ipfsHash);
-                await this.proposalTransactionService.createProposalTransactions(ipfsHash);
+                // await this.proposalTransactionService.createProposalTransactions(ipfsHash);
                 // await this.proposalTransactionService.executeProposalTransactions(ipfsHash);
             }
             return proposalWithReport ? this.mapperService.toProposalDto(proposalWithReport.proposal) : undefined;

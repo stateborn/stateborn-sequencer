@@ -12,8 +12,6 @@ import { Response } from 'express-serve-static-core';
 import { ProposalReportDto } from './dto/report/proposal-report-dto';
 import { ProposalDto } from './dto/proposal-dto';
 import { WrongVotingPowerError } from '../application/error/wrong-voting-power-error';
-import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
-import { BlockchainProposalDto } from './dto/proposal/blockchain-proposal-dto';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {
@@ -122,19 +120,19 @@ export class ProposalController {
         return proposalResultService.calculateProposalResults(ipfsHash);
     }
 
-    //todo
-    @Get('/:ipfsHash/blockchain')
-    async getProposalTransactionsAggregate(
-            @Res() res: Response,
-            @Req() req: Request,
-            @Param('ipfsHash') ipfsHash: string) {
-        const dbProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
-        const blockchainProposal = await dbProposalRepository.findBlockchainProposal(ipfsHash);
-        if (blockchainProposal) {
-            const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
-            return mapperService.toBlockchainProposalDto(blockchainProposal);
-        } else {
-            return undefined;
-        }
-    }
+    //todo probably to remove completely, it is all done client side
+    // @Get('/:ipfsHash/blockchain')
+    // async getProposalTransactionsAggregate(
+    //         @Res() res: Response,
+    //         @Req() req: Request,
+    //         @Param('ipfsHash') ipfsHash: string) {
+    //     const dbProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
+    //     const blockchainProposal = await dbProposalRepository.findBlockchainProposal(ipfsHash);
+    //     if (blockchainProposal) {
+    //         const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
+    //         return mapperService.toBlockchainProposalDto(blockchainProposal);
+    //     } else {
+    //         return undefined;
+    //     }
+    // }
 }

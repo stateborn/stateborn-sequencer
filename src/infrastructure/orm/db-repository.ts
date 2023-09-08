@@ -206,7 +206,7 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
         try {
             const props = await ProposalOrm.findOne({
                 where: {ipfs_hash: ipfsHash},
-                include: [ProposalReportOrm, BlockchainProposalOrm, { model: BlockchainProposalTransactionOrm, where: {proposal_ipfs_hash: ipfsHash}}],
+                include: [ProposalReportOrm, BlockchainProposalOrm, BlockchainProposalTransactionOrm],
             });
             if (props) {
                 const proposal = this.toProposal()(props);

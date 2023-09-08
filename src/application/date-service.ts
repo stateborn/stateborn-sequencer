@@ -31,3 +31,7 @@ export const isDateInTheFuture = (utcDate: string): boolean => {
   // @ts-ignore
   return dayjs.utc(utcDate).isAfter(dayjs.utc());
 }
+
+export const formatDateNice = (date: string) => {
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
+}

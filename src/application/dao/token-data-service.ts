@@ -26,6 +26,7 @@ export class TokenDataService {
         'function balanceOf(address) view returns (uint)',
         // OPTIONAL mostly likely not implemented
         'function decimals() public view returns (uint8)',
+        'function ownerOf(uint256 _tokenId) external view returns (address)'
     ];
 
     private networkProviderService: NetworkProviderService;
