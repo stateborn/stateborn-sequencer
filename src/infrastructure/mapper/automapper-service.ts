@@ -26,6 +26,14 @@ import {
 import {
     BlockchainProposalChainTransactionDto
 } from '../../interfaces/dto/proposal/blockchain-proposal-chain-transaction-dto';
+import { Asset } from '../../domain/model/assets/asset';
+import { AssetDto } from '../../interfaces/dto/assets/asset-dto';
+import { Nft } from '../../domain/model/assets/nft';
+import { NftDto } from '../../interfaces/dto/assets/nft-dto';
+import { AssetDataDto } from '../../interfaces/dto/assets/asset-data-dto';
+import { AssetData } from '../../domain/model/assets/asset-data';
+import { Token } from '../../domain/model/dao/token';
+import { ClientToken } from '../../domain/model/dao/client-token';
 
 export class AutomapperService {
 
@@ -55,6 +63,10 @@ export class AutomapperService {
             forMember((d) => d.data, mapFrom((s) => s.data)),
         );
         createMap(this.mapper, BlockchainProposalChainTransaction, BlockchainProposalChainTransactionDto);
+        createMap(this.mapper, Token, ClientToken);
+        createMap(this.mapper, Nft, NftDto);
+        createMap(this.mapper, AssetData, AssetDataDto);
+        createMap(this.mapper, Asset, AssetDto);
     }
 
     public map(source: any, sourceClass: any, destinationClass: any): any {

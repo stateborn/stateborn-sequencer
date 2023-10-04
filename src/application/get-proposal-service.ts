@@ -2,28 +2,20 @@ import { IDbProposalRepository } from '../domain/repository/i-db-proposal-reposi
 import { MapperService } from './mapper/mapper-service';
 import { isExpired } from './date-service';
 import { ProposalReportService } from './proposal-report-service';
-import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
-import { ProposalTransactionService } from './proposal-transaction-service';
 
 export class GetProposalService {
     private readonly dbProposalRepository: IDbProposalRepository;
-    private readonly dbDaoRepository: IDbDaoRepository;
     private readonly mapperService: MapperService;
     private readonly proposalReportService: ProposalReportService;
-    private readonly proposalTransactionService: ProposalTransactionService;
 
-    constructor({dbProposalRepository, dbDaoRepository, mapperService, proposalReportService, proposalTransactionService}: {
+    constructor({dbProposalRepository, mapperService, proposalReportService}: {
         dbProposalRepository: IDbProposalRepository
-        dbDaoRepository: IDbDaoRepository
         mapperService: MapperService,
         proposalReportService: ProposalReportService,
-        proposalTransactionService: ProposalTransactionService,
     }) {
         this.dbProposalRepository = dbProposalRepository;
-        this.dbDaoRepository = dbDaoRepository;
         this.mapperService = mapperService;
         this.proposalReportService = proposalReportService;
-        this.proposalTransactionService = proposalTransactionService;
     }
 
     public async getProposal(ipfsHash: string) {

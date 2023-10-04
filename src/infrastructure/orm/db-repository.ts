@@ -1,6 +1,6 @@
 import { IDbProposalRepository } from '../../domain/repository/i-db-proposal-repository';
 import { ProposalOrm } from './model/proposal-orm';
-import { col, fn, Model, Op, QueryTypes } from 'sequelize';
+import { col, fn, Model, Op, QueryTypes, Transaction } from 'sequelize';
 import { Proposal } from '../../domain/model/proposal/proposal';
 import { IpfsProposal } from '../../domain/model/proposal/ipfs-proposal';
 import { ClientProposal } from '../../domain/model/proposal/client-proposal';
@@ -22,7 +22,7 @@ import { IDbDaoRepository } from '../../domain/repository/i-db-dao-repository';
 import { IpfsDao } from '../../domain/model/dao/ipfs-dao';
 import { DaoOrm } from './model/dao/dao-orm';
 import { TokenOrm } from './model/dao/token-orm';
-import { DaoToken } from '../../domain/model/dao/dao-token';
+import { Token } from '../../domain/model/dao/token';
 import { TokenType } from '../../domain/model/dao/token-type';
 import { Dao } from '../../domain/model/dao/dao';
 import { SEQUELIZE } from './sequelize-connection-service';
@@ -35,13 +35,17 @@ import { BlockchainProposalTransactionOrm } from './model/proposal-transaction/b
 import { BlockchainProposalStatus } from '../../domain/model/proposal/blockchain-proposal-status';
 import { ClientProposalTransaction } from '../../domain/model/proposal/client-proposal-transaction';
 import { ProposalTransactionData } from '../../domain/model/proposal/proposal-transaction/proposal-transaction-data';
-import { ProposalWithReportAndBlockchainProposal } from '../../domain/model/proposal/proposal-with-report-and-blockchain-proposal';
+import {
+    ProposalWithReportAndBlockchainProposal
+} from '../../domain/model/proposal/proposal-with-report-and-blockchain-proposal';
 import { ProposalTransaction } from '../../domain/model/proposal/proposal-transaction/proposal-transaction';
 import { BlockchainProposalOrm } from './model/proposal-transaction/blockchain-proposal-orm';
 import {
     BlockchainProposalChainTransactionStatus
 } from '../../domain/model/proposal/blockchain-proposal-chain-transaction-status';
-import { BlockchainProposalChainTransactionOrm } from './model/proposal-transaction/blockchain-proposal-chain-transaction-orm';
+import {
+    BlockchainProposalChainTransactionOrm
+} from './model/proposal-transaction/blockchain-proposal-chain-transaction-orm';
 import { BlockchainProposal } from '../../domain/model/proposal/proposal-transaction/blockchain-proposal';
 import {
     BlockchainProposalTransaction
@@ -49,12 +53,95 @@ import {
 import {
     BlockchainProposalChainTransaction
 } from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-chain-transaction';
-import { BlockchainProposalTransactionDto } from '../../interfaces/dto/proposal/blockchain-proposal-transaction-dto';
-import {
-    BlockchainProposalChainTransactionDto
-} from '../../interfaces/dto/proposal/blockchain-proposal-chain-transaction-dto';
+import { IDbAssetDataRepository } from '../../domain/repository/i-db-asset-data-repository';
+import { AssetData } from '../../domain/model/assets/asset-data';
+import { TokenBlacklist } from '../../domain/model/assets/token-blacklist';
+import { TokenBlacklistOrm } from './model/assets/token-blacklist-orm';
+import { NftOrm } from './model/nft/nft-orm';
+import { Nft } from '../../domain/model/assets/nft';
 
-export class DbRepository implements IDbProposalRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository {
+export class DbRepository implements IDbProposalRepository, IDbUserRepository, IDbVoteRepository, IDbDaoRepository, IDbAssetDataRepository {
+    async saveTokenBlacklist(tokensBlacklist: TokenBlacklist[]): Promise<void> {
+        const list: any[] = [];
+        //todo change to batch in future
+        for (const _ of tokensBlacklist) {
+            const single = TokenBlacklistOrm.build(
+                {
+                    address: _.address,
+                    chain_id: _.chainId,
+                    token_type: _.tokenType,
+                }
+            );
+            list.push(single.save());
+        }
+        await Promise.all(list);
+    }
+
+    async isTokenBlacklist(tokenBlacklist: TokenBlacklist): Promise<boolean> {
+        const found = await TokenBlacklistOrm.findOne({
+            where: {
+                address: tokenBlacklist.address,
+                chain_id: tokenBlacklist.chainId,
+        }});
+        return found !== null;
+    }
+
+    async readAssetData(address: string, chainId: string, nftId?: string): Promise<AssetData | undefined> {
+        try {
+            const tokenOrm = await TokenOrm.findOne({
+                where: {address, chain_id: chainId},
+            });
+            if (tokenOrm) {
+                let nft = undefined;
+                const token = this.modelToToken(tokenOrm);
+                if (token.type === TokenType.NFT) {
+                    const nftOrm = await NftOrm.findOne({
+                        where: {token_id: token.id, nft_token_id: nftId},
+                    });
+                    nft = new Nft(
+                        <string>nftOrm!.get('nft_token_id', {plain: true}),
+                        <string>nftOrm!.get('name', {plain: true}),
+                        <string>nftOrm!.get('description', {plain: true}),
+                        <string>nftOrm!.get('token_uri', {plain: true}),
+                        <string>nftOrm!.get('token_metadata', {plain: true}),
+                        <string>nftOrm!.get('token_metadata_hash', {plain: true}),
+                        <string>nftOrm!.get('image_base64', {plain: true}),
+                        <string>nftOrm!.get('thumbnail_image_base64', {plain: true}),
+                        <string>nftOrm!.get('token_id', {plain: true}),
+                        <string>nftOrm!.get('id', {plain: true}),
+                    );
+                }
+                return new AssetData(token, nft);
+            } else {
+                return undefined;
+            }
+        } catch (err) {
+            return undefined;
+        }
+    }
+
+    async saveAssetsData(assets: AssetData[]): Promise<void> {
+        await SEQUELIZE.transaction(async (t) => {
+            //todo change to batch in future
+            for (const _ of assets) {
+                const token = await this.findOrCreateDaoToken(_.token, t);
+                if (_.nft) {
+                    await NftOrm.upsert({
+                        nft_token_id: _.nft.nftTokenId,
+                        token_uri: _.nft.tokenUri,
+                        token_metadata: _.nft.tokenMetadata,
+                        token_metadata_hash: _.nft.tokenMetadataSha256Hex,
+                        image_base64: _.nft.imageBase64,
+                        thumbnail_image_base64: _.nft.thumbnailImageBase64,
+                        description: _.nft.description,
+                        name: _.nft.name,
+                        token_id: token.id,
+                        id: _.nft.id,
+                    }, {transaction: t});
+                }
+            }
+        });
+    }
 
     async findDaosIpfsHashes(offset?: number, limit?: number, filter?: string): Promise<DaoHeader[]> {
         const searchParams: any = {
@@ -167,30 +254,35 @@ export class DbRepository implements IDbProposalRepository, IDbUserRepository, I
         return new User(<string>sequencer.get('address', {plain: true}));
     }
 
-    async findOrCreateDaoToken(daoToken: DaoToken): Promise<DaoToken> {
+    async findOrCreateDaoToken(daoToken: Token, transaction?: Transaction): Promise<Token> {
         try {
 
             const [data, created] = await TokenOrm.findOrCreate({
-                where: {address: daoToken.address},
-                defaults: this.daoTokenToUnsavedTokenOrm(daoToken)
+                where: {address: daoToken.address, chain_id: daoToken.chainId},
+                defaults: this.daoTokenToUnsavedTokenOrm(daoToken),
+                transaction: transaction,
             });
-            return new DaoToken(
-                <string>data.get('address', {plain: true}),
-                <string>data.get('name', {plain: true}),
-                <string>data.get('symbol', {plain: true}),
-                <TokenType>data.get('type', {plain: true}),
-                <string>data.get('chain_id', {plain: true}),
-                <any>data.get('data', {plain: true}),
-                <any>data.get('decimals', {plain: true}),
-                <any>data.get('id', {plain: true}),
-            );
+            return this.modelToToken(data);
         } catch (err) {
             console.log(err);
             throw err;
         }
     }
 
-    private daoTokenToUnsavedTokenOrm(daoToken: DaoToken) {
+    private modelToToken(data: any) : Token {
+        return new Token(
+            <string>data.get('address', {plain: true}),
+            <string>data.get('name', {plain: true}),
+            <string>data.get('symbol', {plain: true}),
+            <TokenType>data.get('type', {plain: true}),
+            <string>data.get('chain_id', {plain: true}),
+            <any>data.get('decimals', {plain: true}),
+            <any>data.get('data', {plain: true}),
+            <any>data.get('id', {plain: true}),
+        );
+    }
+
+    private daoTokenToUnsavedTokenOrm(daoToken: Token) {
         return {
             address: daoToken.address,
             name: daoToken.name,

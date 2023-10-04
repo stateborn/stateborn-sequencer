@@ -8,6 +8,7 @@ import { ClientDao } from '../model/dao/client-dao';
 import { BlockchainProposalTransactionType } from '../model/proposal/blockchain-proposal-transaction-type';
 import { TransferErc20TransactionData } from '../model/proposal/proposal-transaction/transfer-erc-20-transaction-data';
 import { TransferNftTransactionData } from '../model/proposal/proposal-transaction/transfer-nft-transaction-data';
+import { TransferCryptoTransactionData } from '../model/proposal/proposal-transaction/transfer-crypto-transaction-data';
 
 export class SignatureService {
 
@@ -29,7 +30,7 @@ export class SignatureService {
 
     private abiEncodeProposal(clientProposal: ClientProposal): string {
         const types = ["address", "bytes", "bytes", "bytes", "bytes32", "bytes32", "bytes32", "uint256"];
-        const values = [
+        const values: any[] = [
             clientProposal.creatorAddress,
             ethers.toUtf8Bytes(clientProposal.daoIpfsHash),
             ethers.toUtf8Bytes(clientProposal.title),
@@ -65,9 +66,16 @@ export class SignatureService {
                         types.push('uint256');
                         values.push(Number((<TransferNftTransactionData>transaction.data).tokenId));
                         break;
+                    case BlockchainProposalTransactionType.TRANSFER_CRYPTO:
+                        types.push('address');
+                        values.push((<TransferCryptoTransactionData>transaction.data).transferToAddress);
+                        types.push('uint256');
+                        values.push(BigInt((<TransferCryptoTransactionData>transaction.data).amount));
+                        break;
                     default:
                         throw new Error(`Transaction type ${transaction.transactionType} not supported`);
                 }
+                console.log('spakowane bro');
             });
         }
         // Same as `abi.encodePacked` in Solidity

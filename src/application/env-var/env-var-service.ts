@@ -17,3 +17,7 @@ export const getProperty = (propertyName: string): string => {
 export const getBooleanProperty = (propertyName: string): boolean => {
     return getProperty(propertyName) === 'true';
 };
+
+export const getNumberProperty = (propertyName: string): number => {
+    return Number(getProperty(propertyName));
+};

@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
 import { SEQUELIZE } from '../../sequelize-connection-service';
-import { DaoOrm } from './dao-orm';
 
 const TokenOrm = SEQUELIZE.define('token', {
     id: {
@@ -39,8 +38,8 @@ const TokenOrm = SEQUELIZE.define('token', {
 }, {
     indexes: [
         {
-            name: 'dao_token_address_index',
-            fields: ['address'],
+            name: 'dao_token_address_chain_id_index',
+            fields: ['address', 'chain_id'],
         },
     ]
 });

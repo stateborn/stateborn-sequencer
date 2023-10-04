@@ -12,6 +12,7 @@ import { Response } from 'express-serve-static-core';
 import { ProposalReportDto } from './dto/report/proposal-report-dto';
 import { ProposalDto } from './dto/proposal-dto';
 import { WrongVotingPowerError } from '../application/error/wrong-voting-power-error';
+import { NetworkAssetsService } from '../infrastructure/network-assets-service';
 
 @JsonController('/api/rest/v1/proposal')
 export class ProposalController {

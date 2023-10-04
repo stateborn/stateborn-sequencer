@@ -12,6 +12,8 @@ import { ProposalReport } from '../model/proposal/report/proposal-report';
 import { ProposalReportDto } from '../../interfaces/dto/report/proposal-report-dto';
 import { BlockchainProposal } from '../model/proposal/proposal-transaction/blockchain-proposal';
 import { BlockchainProposalDto } from '../../interfaces/dto/proposal/blockchain-proposal-dto';
+import { Asset } from '../model/assets/asset';
+import { AssetDto } from '../../interfaces/dto/assets/asset-dto';
 
 export interface IMapperService {
     toIpfsProposal(createProposalDto: CreateProposalDto): IpfsProposal;
@@ -21,4 +23,5 @@ export interface IMapperService {
     toIpfsVote(createVoteDto: CreateVoteDto): IpfsVote;
     toVoteDto(vote: Vote): VoteDto;
     toBlockchainProposalDto(blockchainProposal: BlockchainProposal): BlockchainProposalDto;
+    toAssetDto(asset: Asset): AssetDto;
 }
