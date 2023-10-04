@@ -7,6 +7,12 @@ import { IMapperService } from '../domain/service/i-mapper-service';
 import { IDbDaoRepository } from '../domain/repository/i-db-dao-repository';
 import { IDbProposalRepository } from '../domain/repository/i-db-proposal-repository';
 import { ProposalHeaderDto } from './dto/proposal/proposal-header-dto';
+import { LOGGER } from '../infrastructure/pino-logger-service';
+import { NetworkAssetsService } from '../infrastructure/network-assets-service';
+import { NetworkProviderService } from '../infrastructure/network-provider-service';
+import { DaoAssetsDto } from './dto/assets/dao-assets-dto';
+import { ethers } from 'ethers';
+import { getBooleanProperty, getProperty } from '../application/env-var/env-var-service';
 
 @JsonController('/api/rest/v1/dao')
 export class DaoController {
@@ -85,5 +91,46 @@ export class DaoController {
         const dpProposalRepository = <IDbProposalRepository>DI_CONTAINER.resolve('dbProposalRepository');
         const proposalCount = await dpProposalRepository.countProposals(daoIpfsHash);
         return { count: proposalCount.toFixed(0) };
+    }
+
+    @Get('/:daoIpfsHash/treasury')
+    async getDaoTreasuryAssets(
+            @Res() res: Response,
+            @Req() req: Request,
+            @Param('daoIpfsHash') daoIpfsHash: string) {
+        const dbDaoRepository = <IDbDaoRepository>DI_CONTAINER.resolve('dbDaoRepository');
+        const dao = await dbDaoRepository.findDao(daoIpfsHash);
+        if (dao) {
+            if (dao.ipfsDao.clientDao.contractAddress) {
+                const networkAssetsService = <NetworkAssetsService>DI_CONTAINER.resolve('networkAssetsService');
+                const chainId = dao.ipfsDao.clientDao.token.chainId;
+                const isDevelopmentMode = getBooleanProperty('IS_DEVELOPMENT_MODE');
+                let assets;
+                if (isDevelopmentMode) {
+                    assets = await networkAssetsService
+                        .getAssetsService('137')
+                        .getAssets('0x9c8071143174f6bdef8917cc985a21c350fc11de');
+                } else {
+                    assets = await networkAssetsService
+                        .getAssetsService(chainId)
+                        .getAssets(dao.ipfsDao.clientDao.contractAddress);
+                }
+                const networkProviderService = <NetworkProviderService>DI_CONTAINER.resolve('networkProviderService');
+                const balance = await networkProviderService.getNetworkProvider(chainId).getProvider().getBalance(dao.ipfsDao.clientDao.contractAddress);
+                const balanceFormatted = ethers.formatEther(balance);
+                const mapperService = <IMapperService>DI_CONTAINER.resolve('mapperService');
+                const assetDtos =  assets.map((_) => mapperService.toAssetDto(_));
+                return new DaoAssetsDto(
+                    assetDtos,
+                    balanceFormatted,
+                    chainId,
+                );
+            } else {
+                LOGGER.debug(`Getting reasury assets failed. Dao with ipfsHash ${daoIpfsHash} is not on-chain`);
+            }
+        } else {
+            LOGGER.debug(`Getting treasury assets failed. Dao not found for ipfsHash: ${daoIpfsHash}`);
+            return [];
+        }
     }
 }

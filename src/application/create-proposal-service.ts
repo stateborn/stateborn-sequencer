@@ -19,6 +19,10 @@ import {
 import {
     TransferNftTransactionData
 } from '../domain/model/proposal/proposal-transaction/transfer-nft-transaction-data';
+import { NetworkProviderService } from '../infrastructure/network-provider-service';
+import {
+    TransferCryptoTransactionData
+} from '../domain/model/proposal/proposal-transaction/transfer-crypto-transaction-data';
 
 export class CreateProposalService {
 
@@ -28,16 +32,21 @@ export class CreateProposalService {
     private readonly mapperService: IMapperService;
     private readonly signatureService: SignatureService;
     private readonly tokenDataService: TokenDataService;
+    private readonly networkProviderService: NetworkProviderService;
     // Client provides block number based on which token balance is read
     // this block number cannot be lower than (latest block number) - BLOCKS_TOLERANCE
     public static readonly BLOCKS_TOLERANCE: number = 10;
+
+    // TODO THIS MUST MATCH CLIENT VALUE
+    public static MINIMUM_WEI_TO_SEND_IN_TRANSFER: bigint = BigInt(100000000);
     constructor({
                     ipfsRepository,
                     dbProposalRepository,
                     mapperService,
                     signatureService,
                     tokenDataService,
-                    dbDaoRepository
+                    dbDaoRepository,
+                    networkProviderService
                 }:
                     {
                         ipfsRepository: IIpfsRepository,
@@ -45,7 +54,8 @@ export class CreateProposalService {
                         mapperService: IMapperService,
                         signatureService: SignatureService,
                         dbDaoRepository: IDbDaoRepository,
-                        tokenDataService: TokenDataService
+                        tokenDataService: TokenDataService,
+                        networkProviderService: NetworkProviderService,
                     }) {
         this.ipfsRepository = ipfsRepository;
         this.dbProposalRepository = dbProposalRepository;
@@ -53,6 +63,7 @@ export class CreateProposalService {
         this.signatureService = signatureService;
         this.tokenDataService = tokenDataService;
         this.dbDaoRepository = dbDaoRepository;
+        this.networkProviderService = networkProviderService;
     }
 
     public async createProposal(createProposalDto: CreateProposalDto): Promise<void> {
@@ -135,6 +146,27 @@ export class CreateProposalService {
                 const ownerOfNft = await this.tokenDataService.getOwnerOfNft(tokenData.token.address, daoContractAddressChainId, Number(tokenData.tokenId));
                 if (ownerOfNft !== daoContractAddress) {
                     throw new Error(`Creating proposal failed. Proposal transaction NFT with address ${tokenData.token.address} id ${tokenData.tokenId} is not owned by DAO ${daoContractAddress}!`);
+                }
+                if (tokenData.transferToAddress.trim() === daoContractAddress) {
+                    throw new Error(`Creating proposal failed. DAO cannot be transaction receiver (receiver has address ${tokenData.transferToAddress.trim()}!`);
+                }
+            } else if (proposalTransaction.transactionType === BlockchainProposalTransactionType.TRANSFER_CRYPTO) {
+                const daoBalance: bigint = await this.networkProviderService.getNetworkProvider(daoContractAddressChainId).getProvider().getBalance(daoContractAddress);
+                const tokenData: TransferCryptoTransactionData = <TransferCryptoTransactionData> proposalTransaction.data;
+                let amountToSend: bigint;
+                try {
+                    amountToSend = BigInt(tokenData.amount);
+                } catch (error) {
+                    throw new Error(`Creating proposal failed. Crypto amount to save ${tokenData.amount} is not Integer (expected WEI integer)!`);
+                }
+                if (amountToSend <= BigInt(0)) {
+                    throw new Error(`Creating proposal failed. Crypto amount to save ${tokenData.amount} is not positive!`);
+                }
+                if (amountToSend > daoBalance) {
+                    throw new Error(`Creating proposal failed. DAO has not enough balance to send ${proposalTransaction.data} wei. DAO balance is ${daoBalance}!`);
+                }
+                if (amountToSend < CreateProposalService.MINIMUM_WEI_TO_SEND_IN_TRANSFER) {
+                    throw new Error(`Creating proposal failed. Amount to send ${amountToSend} wei is below minimum amount ${CreateProposalService.MINIMUM_WEI_TO_SEND_IN_TRANSFER}!`);
                 }
                 if (tokenData.transferToAddress.trim() === daoContractAddress) {
                     throw new Error(`Creating proposal failed. DAO cannot be transaction receiver (receiver has address ${tokenData.transferToAddress.trim()}!`);

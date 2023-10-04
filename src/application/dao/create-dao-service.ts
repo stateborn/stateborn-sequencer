@@ -2,7 +2,7 @@ import { CreateDaoDto } from '../../interfaces/dto/dao/create-dao-dto';
 import { SignatureService } from '../../domain/service/signature-service';
 import { IpfsDao } from '../../domain/model/dao/ipfs-dao';
 import { IDbDaoRepository } from '../../domain/repository/i-db-dao-repository';
-import { DaoToken } from '../../domain/model/dao/dao-token';
+import { Token } from '../../domain/model/dao/token';
 import { TokenDataService } from './token-data-service';
 import { IIpfsRepository } from '../../domain/repository/i-ipfs-repository';
 import { LOGGER } from '../../infrastructure/pino-logger-service';
@@ -37,7 +37,7 @@ export class CreateDaoService {
         const signatureValid = this.signatureService.isDaoValid(createDaoDto.clientDao, createDaoDto.signature, createDaoDto.creatorAddress);
         if (signatureValid) {
             if (this.networkProviderService.isSupportedChainId(createDaoDto.clientDao.token.chainId)) {
-                const token: DaoToken | undefined = await this.tokenDataService.readTokenData(
+                const token: Token | undefined = await this.tokenDataService.readTokenData(
                     createDaoDto.clientDao.token.address, createDaoDto.clientDao.token.chainId);
                 if (token) {
                     const clientTokenMatchesReadToken = this.doesClientTokenDataMatchReadTokenData(createDaoDto.clientDao.token, token);
@@ -68,7 +68,7 @@ export class CreateDaoService {
         }
     }
 
-    private doesClientTokenDataMatchReadTokenData = (clientDaoToken: ClientToken, daoToken: DaoToken) => {
+    private doesClientTokenDataMatchReadTokenData = (clientDaoToken: ClientToken, daoToken: Token) => {
         // chainId is verified by reading token from network
         return clientDaoToken.address === daoToken.address
             && clientDaoToken.name === daoToken.name

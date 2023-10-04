@@ -1,13 +1,13 @@
 import { IpfsProposal } from '../model/proposal/ipfs-proposal';
 import { ProposalReport } from '../model/proposal/report/proposal-report';
 import { ProposalWithReport } from '../model/proposal/proposal-with-report';
-import { ProposalWithReportAndBlockchainProposal } from '../model/proposal/proposal-with-report-and-blockchain-proposal';
-import { BlockchainProposalStatus } from '../model/proposal/blockchain-proposal-status';
-import { ProposalTransaction } from '../model/proposal/proposal-transaction/proposal-transaction';
-import { BlockchainProposalChainTransactionStatus } from '../model/proposal/blockchain-proposal-chain-transaction-status';
 import {
-    BlockchainProposalChainTransactionOrm
-} from '../../infrastructure/orm/model/proposal-transaction/blockchain-proposal-chain-transaction-orm';
+    ProposalWithReportAndBlockchainProposal
+} from '../model/proposal/proposal-with-report-and-blockchain-proposal';
+import { BlockchainProposalStatus } from '../model/proposal/blockchain-proposal-status';
+import {
+    BlockchainProposalChainTransactionStatus
+} from '../model/proposal/blockchain-proposal-chain-transaction-status';
 import { BlockchainProposal } from '../model/proposal/proposal-transaction/blockchain-proposal';
 
 export interface IDbProposalRepository {

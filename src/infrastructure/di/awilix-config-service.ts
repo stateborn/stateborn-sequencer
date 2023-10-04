@@ -19,6 +19,13 @@ import { PolygonNetworkProvider } from '../polygon-network-provider';
 import { LocalhostNetworkProvider } from '../localhost-network-provider';
 import { DaoTransactionService } from '../../application/dao/dao-transaction-service';
 import { ProposalTransactionService } from '../../application/proposal-transaction-service';
+import { AlchemySdkService } from '../alchemy-sdk-service';
+import { POLYGON_MAINNET_CHAIN_ID } from '../../application/app-constants';
+import { PolygonAssetsService } from '../assets/polygon-assets-service';
+import { NetworkAssetsService } from '../network-assets-service';
+import { CacheService } from '../cache-service';
+import { CacheAssetsBalancesRepository } from '../assets/cache-assets-balances-repository';
+import { NftImageService } from '../assets/nft-image-service';
 
 export const DI_CONTAINER = createContainer({
     injectionMode: InjectionMode.PROXY
@@ -97,6 +104,24 @@ export const initializeAwilixDI = () => {
             lifetime: Lifetime.SINGLETON,
         }),
         proposalTransactionService: asClass(ProposalTransactionService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        polygonAssetsService: asClass(PolygonAssetsService, {
+            lifetime: Lifetime.SINGLETON,
+        }).inject(() => ({alchemySdkService: new AlchemySdkService(POLYGON_MAINNET_CHAIN_ID)})),
+        networkAssetsService: asClass(NetworkAssetsService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        cacheService: asClass(CacheService, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        cacheAssetsBalancesRepository: asClass(CacheAssetsBalancesRepository, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        assetDataRepository: asClass(DbRepository, {
+            lifetime: Lifetime.SINGLETON,
+        }),
+        nftImageService: asClass(NftImageService, {
             lifetime: Lifetime.SINGLETON,
         })
     });

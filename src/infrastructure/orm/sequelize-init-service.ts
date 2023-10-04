@@ -12,11 +12,9 @@ import { DaoContractOrm } from './model/dao/dao-contract-orm';
 import { BlockchainProposalTransactionOrm } from './model/proposal-transaction/blockchain-proposal-transaction-orm';
 import { BlockchainProposalOrm } from './model/proposal-transaction/blockchain-proposal-orm';
 import {
-    BlockchainProposalChainTransaction
-} from '../../domain/model/proposal/proposal-transaction/blockchain-proposal-chain-transaction';
-import {
     BlockchainProposalChainTransactionOrm
 } from './model/proposal-transaction/blockchain-proposal-chain-transaction-orm';
+import { NftOrm } from './model/nft/nft-orm';
 
 export const syncOrm = async () => {
     try {
@@ -55,6 +53,9 @@ export const syncOrm = async () => {
         await SEQUELIZE.query("CREATE INDEX if not exists dao_name_full_text_index ON daos USING GIN (to_tsvector('simple', name))");
         await SEQUELIZE.query("CREATE INDEX if not exists dao_description_full_text_index ON daos USING GIN (to_tsvector('simple', description))");
         await SEQUELIZE.query("CREATE INDEX if not exists dao_ipfs_hash_full_text_index ON daos USING GIN (to_tsvector('simple', ipfs_hash))");
+        await NftOrm.sync();
+        // 3.09.2023 - this on address only is replaced with {address, chainId} index
+        await SEQUELIZE.getQueryInterface().removeIndex('token', 'dao_token_address_index');
     } catch (error) {
         console.error('Unable to connect to DB:', error);
         throw error;

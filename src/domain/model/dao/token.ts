@@ -1,13 +1,21 @@
 import { TokenType } from './token-type';
+import { AutoMap } from '@automapper/classes';
 
-export class DaoToken {
+export class Token {
 
+    @AutoMap()
     address: string;
+    @AutoMap()
     name: string;
+    @AutoMap()
     symbol: string;
+    @AutoMap()
     type: TokenType;
+    @AutoMap()
     chainId: string;
+    @AutoMap()
     decimals: number;
+
     data?: any;
     //todo consider separating
     id?: string;
