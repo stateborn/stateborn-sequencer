@@ -108,8 +108,8 @@ export class DaoController {
                 let assets;
                 if (isDevelopmentMode) {
                     assets = await networkAssetsService
-                        .getAssetsService('137')
-                        .getAssets('0x9c8071143174f6bdef8917cc985a21c350fc11de');
+                        .getAssetsService(getProperty('EXAMPLE_DEVELOPMENT_MODE_CHAIN_ID_TO_READ_TREASURY_MATCHING_ADDRESS'))
+                        .getAssets(getProperty('EXAMPLE_DEVELOPMENT_MODE_ADDRESS_ON_POLYGON_TO_READ_TREASURY'));
                 } else {
                     assets = await networkAssetsService
                         .getAssetsService(chainId)
